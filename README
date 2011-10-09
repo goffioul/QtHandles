@@ -1,1 +1,12 @@
-Qt-based toolkit for Octave.
+QtHandles
+=========
+
+QtHandles is a Qt-based toolkit for Octave.
+
+License
+-------
+
+QtHandles is licensed under GPL v3 or higher.
+
+The icons used in QtHandles are from the Crystal icon set and are licensed
+under LGPL. See http://www.everaldo.com/crystal/ for more information.

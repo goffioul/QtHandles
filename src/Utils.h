@@ -1,0 +1,83 @@
+/*
+
+Copyright (C) 2011 Michael Goffioul.
+
+This file is part of QtHandles.
+
+Foobar is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+QtHandles is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
+
+#ifndef __QtHandles_Utils__
+#define __QtHandles_Utils__ 1
+
+#include <QColor>
+#include <QFont>
+#include <QString>
+#include <QStringList>
+
+#include <string>
+
+#include <octave/oct.h>
+#include <octave/graphics.h>
+
+class QMouseEvent;
+
+//////////////////////////////////////////////////////////////////////////////
+
+namespace QtHandles
+{
+
+//////////////////////////////////////////////////////////////////////////////
+
+namespace Utils
+{
+  QString fromStdString (const std::string& s);
+  std::string toStdString (const QString& s);
+
+  QStringList fromStringVector (const string_vector& v);
+  string_vector toStringVector (const QStringList& l);
+
+  template <class T>
+  QFont computeFont (const typename T::properties& props, int height = -1);
+
+  QColor fromRgb (const Matrix& rgb);
+  Matrix toRgb (const QColor& c);
+
+  Qt::Alignment fromHVAlign (const caseless_str& halign,
+			     const caseless_str& valign);
+
+  std::string figureSelectionType (QMouseEvent* event,
+				   bool isDoubleClick = false);
+
+  Matrix figureCurrentPoint (const graphics_object& fig, QMouseEvent* event);
+
+  template <class T>
+  inline typename T::properties&
+  properties (graphics_object obj)
+    { return dynamic_cast<typename T::properties&> (obj.get_properties ()); }
+
+  template <class T>
+  inline typename T::properties&
+  properties (const graphics_handle& h)
+    { return Utils::properties<T> (gh_manager::get_object (h)); }
+};
+
+//////////////////////////////////////////////////////////////////////////////
+
+}; // namespace QtHandles
+
+//////////////////////////////////////////////////////////////////////////////
+
+#endif

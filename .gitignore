@@ -1,0 +1,12 @@
+# Ignore Makefile's
+Makefile
+Makefile.Debug
+Makefile.Release
+# Compiled targets
+octave-qt
+octave-qt.exe
+__init_qt__.oct
+# Build directories and files under MSVC
+release/
+debug/
+vc*.pdb
