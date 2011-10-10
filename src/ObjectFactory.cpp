@@ -30,6 +30,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "EditControl.h"
 #include "Figure.h"
 #include "ListBoxControl.h"
+#include "Menu.h"
 #include "ObjectFactory.h"
 #include "ObjectProxy.h"
 #include "Panel.h"
@@ -115,6 +116,8 @@ void ObjectFactory::createObject (double handle)
 		}
 	      else if (go.isa ("uipanel"))
 		obj = Panel::create (go);
+	      else if (go.isa ("uimenu"))
+		obj = Menu::create (go);
 	      else
 		qWarning ("ObjectFactory::createObject: unsupported type `%s'",
 			  go.type ().c_str ());

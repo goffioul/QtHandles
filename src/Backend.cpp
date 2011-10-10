@@ -50,8 +50,11 @@ static std::string toolkitObjectProperty (const graphics_object& go)
 {
   if (go.isa ("figure"))
     return std::string ("__plot_stream__");
-  else if (go.isa ("uicontrol") || go.isa ("uipanel"))
+  else if (go.isa ("uicontrol") || go.isa ("uipanel") || go.isa ("uimenu"))
     return std::string ("__object__");
+  else
+    qCritical ("QtHandles::Backend: no __object__ property known for object "
+	       "of type %s", go.type ().c_str ());
 
   return std::string ();
 }
@@ -79,7 +82,8 @@ bool Backend::initialize (const graphics_object& go)
 {
   if (go.isa ("figure")
       || go.isa ("uicontrol")
-      || go.isa ("uipanel"))
+      || go.isa ("uipanel")
+      || go.isa ("uimenu"))
     {
       qDebug ("Backend::initialize %s from thread %08x",
 	      go.type ().c_str (), QThread::currentThreadId ());

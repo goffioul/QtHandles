@@ -73,6 +73,7 @@ private:
   void createFigureToolBar (void);
   void showFigureToolBar (bool visible);
   void createMenuBar (void);
+  void showMenuBar (bool visible);
 
 private slots:
   void setMouseMode (MouseMode mode) { m_mouseMode = mode; }

@@ -25,6 +25,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <QEvent>
 #include <QFrame>
 #include <QMainWindow>
+#include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QTimer>
@@ -66,6 +67,23 @@ static bool hasUiControlChildren (const figure::properties& fp)
 
 //////////////////////////////////////////////////////////////////////////////
 
+static bool hasUiMenuChildren (const figure::properties& fp)
+{
+  Matrix kids = fp.get_all_children ();
+
+  for (int i = 0; i < kids.numel (); i++)
+    {
+      graphics_object go (gh_manager::get_object (kids(i)));
+
+      if (go && go.isa ("uimenu"))
+	return true;
+    }
+
+  return false;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
 Figure* Figure::create (const graphics_object& go)
 {
   return new Figure (go, new FigureWindow ());
@@ -85,14 +103,16 @@ Figure::Figure (const graphics_object& go, QMainWindow* win)
   createFigureToolBar ();
   createMenuBar ();
 
-  int offset = m_figureToolBar->sizeHint ().height ();
-  if ((fp.toolbar_is ("auto") && hasUiControlChildren (fp))
-      || fp.toolbar_is ("none"))
-    {
-      m_figureToolBar->hide ();
-      offset = 0;
-    }
-  offset += win->menuBar ()->sizeHint ().height () + 1;
+  int offset = 0;
+  if (fp.toolbar_is ("figure")
+      || (fp.toolbar_is ("auto") && ! hasUiControlChildren (fp)))
+    offset += m_figureToolBar->sizeHint ().height ();
+  else
+    m_figureToolBar->hide ();
+  if (fp.menubar_is ("figure") || hasUiMenuChildren (fp))
+    offset += win->menuBar ()->sizeHint ().height () + 1;
+  else
+    win->menuBar ()->hide ();
 
   Matrix bb = fp.get_boundingbox ();
   win->setGeometry (xround (bb(0)), xround (bb(1)) - offset,
@@ -138,10 +158,14 @@ void Figure::createMenuBar (void)
   QMenuBar* menuBar = win->menuBar ();
 
   QMenu* helpMenu = menuBar->addMenu (tr ("&Help"));
+  helpMenu->setObjectName ("builtinMenu");
   connect (helpMenu->addAction (tr ("About QtHandles")),
 	   SIGNAL (triggered (void)), this, SLOT (aboutQtHandles (void)));
   connect (helpMenu->addAction (tr ("About Qt")), SIGNAL (triggered (void)),
 	   qApp, SLOT (aboutQt (void)));
+
+  qDebug ("%d %d", menuBar->sizeHint ().height (),
+	  menuBar->minimumSize ().height ());
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -227,6 +251,9 @@ void Figure::update (int pId)
       else // "auto"
 	showFigureToolBar (! hasUiControlChildren (fp));
       break;
+    case figure::properties::ID_MENUBAR:
+      showMenuBar (fp.menubar_is ("figure"));
+      break;
     default:
       break;
     }
@@ -260,6 +287,35 @@ void Figure::showFigureToolBar (bool visible)
 	  m_lastMouseMode = m_mouseMode;
 	  m_mouseMode = NoMode;
 	}
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void Figure::showMenuBar (bool visible)
+{
+  QMenuBar* menuBar = qWidget<QMainWindow> ()->menuBar ();
+
+  foreach (QMenu* menu, menuBar->findChildren<QMenu*> ("builtinMenu"))
+   menu->menuAction ()->setVisible (visible);
+
+  if (! visible)
+    visible = hasUiMenuChildren (properties<figure> ());
+
+  if (menuBar->isVisible () != visible)
+    {
+      int dy = menuBar->sizeHint ().height () + 1;
+      QRect r = qWidget<QWidget> ()->geometry ();
+
+      if (! visible)
+	r.adjust (0, dy, 0, 0);
+      else
+	r.adjust (0, -dy, 0, 0);
+
+      m_blockUpdates = true;
+      qWidget<QWidget> ()->setGeometry (r);
+      menuBar->setVisible (visible);
+      m_blockUpdates = false;
     }
 }
 

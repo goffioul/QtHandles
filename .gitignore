@@ -6,7 +6,13 @@ Makefile.Release
 octave-qt
 octave-qt.exe
 __init_qt__.oct
+lib__init_qt__.so*
 # Build directories and files under MSVC
 release/
 debug/
 vc*.pdb
+# Object files under UNIX
+*.o
+# Qt MOC/RCC files
+moc_*.cpp
+qrc_*.cpp
