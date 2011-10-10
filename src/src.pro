@@ -5,6 +5,7 @@ QT += opengl
 CONFIG += dll
 
 include(../common.pri)
+DEFINES += __STDC_LIMIT_MACROS
 
 SOURCES = \
 	 __init_qt__.cpp \
@@ -19,6 +20,7 @@ SOURCES = \
 	 FigureWindow.cpp \
 	 GLCanvas.cpp \
 	 ListBoxControl.cpp \
+	 Menu.cpp \
 	 MouseModeActionGroup.cpp \
 	 Object.cpp \
 	 ObjectFactory.cpp \
@@ -46,6 +48,7 @@ HEADERS = \
 	 FigureWindow.h \
 	 GLCanvas.h \
 	 ListBoxControl.h \
+	 Menu.h \
 	 MouseModeActionGroup.h \
 	 Object.h \
 	 ObjectFactory.h \
