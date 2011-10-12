@@ -34,6 +34,28 @@ namespace QtHandles
 
 //////////////////////////////////////////////////////////////////////////////
 
+static QKeySequence accelSequence (const uimenu::properties& up)
+{
+  std::string s (up.get_accelerator ());
+
+  if (! s.empty ())
+    {
+      char c = s[0];
+      int keyMod = Qt::CTRL;
+
+      if (c >= 'A' && c <= 'Z')
+	keyMod |= Qt::SHIFT;
+      if (c >= 'a' && c <= 'z')
+	c -= ('a' - 'A');
+      if (c >= 'A' && c <= 'Z')
+	return QKeySequence (keyMod | static_cast<int> (c));
+    }
+
+  return QKeySequence ();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
 Menu* Menu::create (const graphics_object& go)
 {
   Object* parent = Object::parentObject (go);
@@ -52,22 +74,83 @@ Menu* Menu::create (const graphics_object& go)
 //////////////////////////////////////////////////////////////////////////////
 
 Menu::Menu (const graphics_object& go, QAction* action, Object* parent)
-    : Object (go, action)
+    : Object (go, action), m_parent (0), m_separator (0)
 {
   uimenu::properties& up = properties<uimenu> ();
 
   action->setText (Utils::fromStdString (up.get_label ()));
+  if (up.is_checked ())
+    {
+      action->setCheckable (true);
+      action->setChecked (up.is_checked ());
+    }
+  action->setEnabled (up.is_enable ());
+  action->setShortcut (accelSequence (up));
+  action->setVisible (up.is_visible ());
+  if (up.is_separator ())
+    {
+      m_separator = new QAction (action);
+      m_separator->setSeparator (true);
+      m_separator->setVisible (up.is_visible ());
+    }
+
   if (parent->object ().isa ("figure"))
-    parent->qWidget<QMainWindow> ()->menuBar ()->addAction (action);
+    m_parent = parent->qWidget<QMainWindow> ()->menuBar ();
   else
     {
       Menu* parentMenu = dynamic_cast<Menu*> (parent);
 
       if (parentMenu)
-	parentMenu->menu ()->addAction (action);
+	m_parent = parentMenu->menu ();
+    }
+  if (m_parent)
+    {
+      int pos = static_cast<int> (up.get_position ());
+
+      if (pos <= 0)
+	{
+	  if (m_separator)
+	    m_parent->insertAction (0, m_separator);
+	  m_parent->insertAction (0, action);
+
+	  int count = 0;
+
+	  foreach (QAction* a, m_parent->actions ())
+	    if (! a->isSeparator () && a->objectName () != "builtinMenu")
+	      count++;
+	  up.get_property ("position").set
+	    (octave_value (static_cast<double> (count)), true, false);
+	}
+      else
+	{
+
+	  int count = 0;
+	  QAction* before = 0;
+
+	  foreach (QAction* a, m_parent->actions ())
+	    if (! a->isSeparator () && a->objectName () != "builtinMenu")
+	      {
+		count++;
+		if (pos <= count)
+		  {
+		    before = a;
+		    break;
+		  }
+	      }
+
+	  if (m_separator)
+	    m_parent->insertAction (before, m_separator);
+	  m_parent->insertAction (before, action);
+
+	  if (before)
+	    updateSiblingPositions ();
+	  else
+	    up.get_property ("position").set
+	      (octave_value (static_cast<double> (count+1)), true, false);
+	}
     }
 
-  connect (action, SIGNAL (triggered (bool)), SLOT (actionTriggered (bool)));
+  connect (action, SIGNAL (triggered (bool)), SLOT (actionTriggered (void)));
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -88,6 +171,79 @@ void Menu::update (int pId)
     case uimenu::properties::ID_LABEL:
       action->setText (Utils::fromStdString (up.get_label ()));
       break;
+    case uimenu::properties::ID_CHECKED:
+      if (up.is_checked ())
+	{
+	  action->setCheckable (true);
+	  action->setChecked (up.is_checked ());
+	}
+      else
+	{
+	  action->setChecked (false);
+	  action->setCheckable (false);
+	}
+      break;
+    case uimenu::properties::ID_ENABLE:
+      action->setEnabled (up.is_enable ());
+      break;
+    case uimenu::properties::ID_ACCELERATOR:
+      if (! action->menu ())
+	action->setShortcut (accelSequence (up));
+      break;
+    case uimenu::properties::ID_SEPARATOR:
+      if (up.is_separator ())
+	{
+	  if (! m_separator)
+	    {
+	      m_separator = new QAction (action);
+	      m_separator->setSeparator (true);
+	      m_separator->setVisible (up.is_visible ());
+	      if (m_parent)
+		m_parent->insertAction (action, m_separator);
+	    }
+	}
+      else
+	{
+	  if (m_separator)
+	    delete m_separator;
+	  m_separator = 0;
+	}
+      break;
+    case uimenu::properties::ID_VISIBLE:
+      action->setVisible (up.is_visible ());
+      if (m_separator)
+	m_separator->setVisible (up.is_visible ());
+      break;
+    case uimenu::properties::ID_POSITION:
+      if (m_separator)
+	m_parent->removeAction (m_separator);
+      m_parent->removeAction (action);
+	{
+	  int pos = static_cast<int> (up.get_position ());
+	  QAction* before = 0;
+
+	  if (pos > 0)
+	    {
+	      int count = 0;
+
+	      foreach (QAction* a, m_parent->actions ())
+		if (! a->isSeparator () && a->objectName () != "builtinMenu")
+		  {
+		    count++;
+		    if (pos <= count)
+		      {
+			before = a;
+			break;
+		      }
+		  }
+	    }
+
+	  if (m_separator)
+	    m_parent->insertAction (before, m_separator);
+	  m_parent->insertAction (before, action);
+	  updateSiblingPositions ();
+	}
+      break;
     default:
       Object::update (pId);
       break;
@@ -105,6 +261,9 @@ QMenu* Menu::menu (void)
     {
       _menu = new QMenu (action->parentWidget ());
       action->setMenu (_menu);
+      action->setShortcut (QKeySequence ());
+      connect (_menu, SIGNAL (aboutToShow (void)),
+	       this, SLOT (actionHovered (void)));
     }
 
   return _menu;
@@ -112,9 +271,55 @@ QMenu* Menu::menu (void)
 
 //////////////////////////////////////////////////////////////////////////////
 
-void Menu::actionTriggered (bool checked)
+void Menu::actionTriggered (void)
+{
+  QAction* action = qWidget<QAction> ();
+
+  if (action->isCheckable ())
+    action->setChecked (! action->isChecked ());
+  gh_manager::post_callback (m_handle, "callback");
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void Menu::actionHovered (void)
 {
   gh_manager::post_callback (m_handle, "callback");
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void Menu::updateSiblingPositions (void)
+{
+  if (m_parent)
+    {
+      double count = 1.0;
+
+      foreach (QAction* a, m_parent->actions ())
+	{
+	  if (! a->isSeparator () && a->objectName () != "builtinMenu")
+	    {
+	      Object* aObj = Object::fromQObject (a);
+
+	      if (aObj)
+		{
+		  graphics_object go = aObj->object ();
+
+		  // Probably overkill as a uimenu child can only be another
+		  // uimenu object.
+		  if (go.isa ("uimenu"))
+		    {
+		      uimenu::properties& up = Utils::properties<uimenu> (go);
+
+		      up.get_property ("position").set
+			(octave_value (count), true, false);
+		    }
+		}
+
+	      count++;
+	    }
+	}
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////

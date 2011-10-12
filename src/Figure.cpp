@@ -158,7 +158,7 @@ void Figure::createMenuBar (void)
   QMenuBar* menuBar = win->menuBar ();
 
   QMenu* helpMenu = menuBar->addMenu (tr ("&Help"));
-  helpMenu->setObjectName ("builtinMenu");
+  helpMenu->menuAction ()->setObjectName ("builtinMenu");
   connect (helpMenu->addAction (tr ("About QtHandles")),
 	   SIGNAL (triggered (void)), this, SLOT (aboutQtHandles (void)));
   connect (helpMenu->addAction (tr ("About Qt")), SIGNAL (triggered (void)),
@@ -296,8 +296,9 @@ void Figure::showMenuBar (bool visible)
 {
   QMenuBar* menuBar = qWidget<QMainWindow> ()->menuBar ();
 
-  foreach (QMenu* menu, menuBar->findChildren<QMenu*> ("builtinMenu"))
-   menu->menuAction ()->setVisible (visible);
+  foreach (QAction* a, menuBar->actions ())
+    if (a->objectName () == "builtinMenu")
+      a->setVisible (visible);
 
   if (! visible)
     visible = hasUiMenuChildren (properties<figure> ());

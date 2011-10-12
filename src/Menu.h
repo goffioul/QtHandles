@@ -26,6 +26,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 class QAction;
 class QMenu;
+class QWidget;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -52,7 +53,15 @@ protected:
   void update (int pId);
 
 private slots:
-  void actionTriggered (bool checked);
+  void actionTriggered (void);
+  void actionHovered (void);
+
+private:
+  void updateSiblingPositions (void);
+
+private:
+  QWidget* m_parent;
+  QAction* m_separator;
 };
 
 //////////////////////////////////////////////////////////////////////////////
