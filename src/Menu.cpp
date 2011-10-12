@@ -24,6 +24,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMenu>
 #include <QMenuBar>
 
+#include "Figure.h"
 #include "Menu.h"
 #include "Utils.h"
 
@@ -94,8 +95,13 @@ Menu::Menu (const graphics_object& go, QAction* action, Object* parent)
       m_separator->setVisible (up.is_visible ());
     }
 
+  Figure* fig = 0;
+
   if (parent->object ().isa ("figure"))
-    m_parent = parent->qWidget<QMainWindow> ()->menuBar ();
+    {
+      fig = dynamic_cast<Figure*> (parent);
+      m_parent = parent->qWidget<QMainWindow> ()->menuBar ();
+    }
   else
     {
       Menu* parentMenu = dynamic_cast<Menu*> (parent);
@@ -148,6 +154,9 @@ Menu::Menu (const graphics_object& go, QAction* action, Object* parent)
 	    up.get_property ("position").set
 	      (octave_value (static_cast<double> (count+1)), true, false);
 	}
+
+      //if (fig)
+	//fig->updateMenuBar ();
     }
 
   connect (action, SIGNAL (triggered (bool)), SLOT (actionTriggered (void)));

@@ -95,6 +95,8 @@ protected:
   virtual void finalize (void);
   virtual void redraw (void);
 
+  virtual void beingDeleted (void);
+
 protected:
   graphics_handle m_handle;
   QObject* m_qobject;

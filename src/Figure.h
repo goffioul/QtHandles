@@ -25,6 +25,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "Object.h"
 
 class QMainWindow;
+class QMenuBar;
 class QToolBar;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -55,7 +56,7 @@ public:
   Figure (const graphics_object& go, QMainWindow* win);
   ~Figure (void);
 
-  void redraw (void);
+  static Figure* create (const graphics_object& go);
 
   MouseMode mouseMode (void) { return m_mouseMode; }
 
@@ -63,27 +64,33 @@ public:
 
   bool eventFilter (QObject* watched, QEvent* event);
 
-  static Figure* create (const graphics_object& go);
-
 protected:
+  void redraw (void);
   void update (int pId);
   void updateBoundingBox (void);
+  void beingDeleted (void);
 
 private:
-  void createFigureToolBar (void);
+  void createFigureToolBarAndMenuBar (void);
   void showFigureToolBar (bool visible);
-  void createMenuBar (void);
   void showMenuBar (bool visible);
 
 private slots:
   void setMouseMode (MouseMode mode) { m_mouseMode = mode; }
-  void aboutQtHandles (void);
+  void fileNewFigure (void);
+  void fileCloseFigure (void);
+  void editCopy (void);
+  void editCut (void);
+  void editPaste (void);
+  void helpAboutQtHandles (void);
+  void updateMenuBar (void);
 
 private:
   Container* m_container;
   bool m_blockUpdates;
   MouseMode m_mouseMode, m_lastMouseMode;
   QToolBar* m_figureToolBar;
+  QMenuBar* m_menuBar;
 };
 
 //////////////////////////////////////////////////////////////////////////////

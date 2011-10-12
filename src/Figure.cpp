@@ -20,6 +20,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <QAction>
+#include <QActionEvent>
 #include <QActionGroup>
 #include <QApplication>
 #include <QEvent>
@@ -100,8 +101,7 @@ Figure::Figure (const graphics_object& go, QMainWindow* win)
 
   figure::properties& fp = properties<figure> ();
 
-  createFigureToolBar ();
-  createMenuBar ();
+  createFigureToolBarAndMenuBar ();
 
   int offset = 0;
   if (fp.toolbar_is ("figure")
@@ -110,9 +110,9 @@ Figure::Figure (const graphics_object& go, QMainWindow* win)
   else
     m_figureToolBar->hide ();
   if (fp.menubar_is ("figure") || hasUiMenuChildren (fp))
-    offset += win->menuBar ()->sizeHint ().height () + 1;
+    offset += m_menuBar->sizeHint ().height () + 1;
   else
-    win->menuBar ()->hide ();
+    m_menuBar->hide ();
 
   Matrix bb = fp.get_boundingbox ();
   win->setGeometry (xround (bb(0)), xround (bb(1)) - offset,
@@ -136,7 +136,7 @@ Figure::~Figure (void)
 
 //////////////////////////////////////////////////////////////////////////////
 
-void Figure::createFigureToolBar (void)
+void Figure::createFigureToolBarAndMenuBar (void)
 {
   QMainWindow* win = qWidget<QMainWindow> ();
 
@@ -148,24 +148,38 @@ void Figure::createFigureToolBar (void)
   connect (mouseModeGroup, SIGNAL (modeChanged (MouseMode)),
 	   SLOT (setMouseMode (MouseMode)));
   m_figureToolBar->addActions (mouseModeGroup->actions ());
-}
 
-//////////////////////////////////////////////////////////////////////////////
+  m_menuBar = win->menuBar ();
 
-void Figure::createMenuBar (void)
-{
-  QMainWindow* win = qWidget<QMainWindow> ();
-  QMenuBar* menuBar = win->menuBar ();
+  QMenu* fileMenu = m_menuBar->addMenu (tr ("&File"));
+  fileMenu->menuAction ()->setObjectName ("builtinMenu");
+  fileMenu->addAction (tr ("&New Figure"), this, SLOT (fileNewFigure (void)));
+  fileMenu->addAction (tr ("&Open..."))->setEnabled (false);
+  fileMenu->addSeparator ();
+  fileMenu->addAction (tr ("&Save"))->setEnabled (false);
+  fileMenu->addAction (tr ("Save &As"))->setEnabled (false);
+  fileMenu->addSeparator ();
+  fileMenu->addAction (tr ("&Close Figure"), this,
+		       SLOT (fileCloseFigure (void)), Qt::CTRL|Qt::Key_W);
 
-  QMenu* helpMenu = menuBar->addMenu (tr ("&Help"));
+  QMenu* editMenu = m_menuBar->addMenu (tr ("&Edit"));
+  editMenu->menuAction ()->setObjectName ("builtinMenu");
+  editMenu->addAction (tr ("Cop&y"), this, SLOT (editCopy (void)),
+		       Qt::CTRL|Qt::Key_C)->setEnabled (false);
+  editMenu->addAction (tr ("Cu&t"), this, SLOT (editCut (void)),
+		       Qt::CTRL|Qt::Key_X)->setEnabled (false);
+  editMenu->addAction (tr ("&Paste"), this, SLOT (editPaste(void)),
+		       Qt::CTRL|Qt::Key_V)->setEnabled (false);
+  editMenu->addSeparator ();
+  editMenu->addActions (mouseModeGroup->actions ());
+
+  QMenu* helpMenu = m_menuBar->addMenu (tr ("&Help"));
   helpMenu->menuAction ()->setObjectName ("builtinMenu");
-  connect (helpMenu->addAction (tr ("About QtHandles")),
-	   SIGNAL (triggered (void)), this, SLOT (aboutQtHandles (void)));
-  connect (helpMenu->addAction (tr ("About Qt")), SIGNAL (triggered (void)),
-	   qApp, SLOT (aboutQt (void)));
+  helpMenu->addAction (tr ("&About QtHandles"), this,
+		       SLOT (helpAboutQtHandles (void)));
+  helpMenu->addAction (tr ("About &Qt"), qApp, SLOT (aboutQt (void)));
 
-  qDebug ("%d %d", menuBar->sizeHint ().height (),
-	  menuBar->minimumSize ().height ());
+  m_menuBar->installEventFilter (this);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -199,6 +213,17 @@ void Figure::redraw (void)
 
 //////////////////////////////////////////////////////////////////////////////
 
+void Figure::beingDeleted (void)
+{
+  Canvas* canvas = m_container->canvas (m_handle.value (), false);
+
+  if (canvas)
+    canvas->blockRedraw (true);
+  m_menuBar->removeEventFilter (this);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
 void Figure::update (int pId)
 {
   if (m_blockUpdates)
@@ -211,15 +236,6 @@ void Figure::update (int pId)
 
   switch (pId)
     {
-    case base_properties::ID_BEINGDELETED:
-      if (fp.is_beingdeleted ())
-	{
-	  Canvas* canvas = m_container->canvas (m_handle.value (), false);
-
-	  if (canvas)
-	    canvas->blockRedraw (true);
-	}
-      break;
     case figure::properties::ID_POSITION:
 	{
 	  Matrix bb = fp.get_boundingbox ();
@@ -227,8 +243,8 @@ void Figure::update (int pId)
 
 	  if (m_figureToolBar->isVisible ())
 	    offset = m_figureToolBar->sizeHint ().height ();
-	  if (win->menuBar ()->isVisible ())
-	    offset += win->menuBar ()->sizeHint ().height () + 1;
+	  if (m_menuBar->isVisible ())
+	    offset += m_menuBar->sizeHint ().height () + 1;
 	  win->setGeometry (xround (bb(0)), xround (bb(1)) - offset,
 			    xround (bb(2)), xround (bb(3)) + offset);
 	}
@@ -294,18 +310,20 @@ void Figure::showFigureToolBar (bool visible)
 
 void Figure::showMenuBar (bool visible)
 {
-  QMenuBar* menuBar = qWidget<QMainWindow> ()->menuBar ();
+  int h1 = m_menuBar->sizeHint ().height ();
 
-  foreach (QAction* a, menuBar->actions ())
+  foreach (QAction* a, m_menuBar->actions ())
     if (a->objectName () == "builtinMenu")
       a->setVisible (visible);
+
+  int h2 = m_menuBar->sizeHint ().height ();
 
   if (! visible)
     visible = hasUiMenuChildren (properties<figure> ());
 
-  if (menuBar->isVisible () != visible)
+  if (m_menuBar->isVisible () != visible)
     {
-      int dy = menuBar->sizeHint ().height () + 1;
+      int dy = qMax (h1, h2) + 1;
       QRect r = qWidget<QWidget> ()->geometry ();
 
       if (! visible)
@@ -315,9 +333,20 @@ void Figure::showMenuBar (bool visible)
 
       m_blockUpdates = true;
       qWidget<QWidget> ()->setGeometry (r);
-      menuBar->setVisible (visible);
+      m_menuBar->setVisible (visible);
       m_blockUpdates = false;
     }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void Figure::updateMenuBar (void)
+{
+  gh_manager::auto_lock lock;
+  graphics_object go = object ();
+
+  if (go.valid_object ())
+    showMenuBar (Utils::properties<figure> (go).menubar_is ("figure"));
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -379,6 +408,31 @@ bool Figure::eventFilter (QObject* obj, QEvent* event)
 	      break;
 	    }
 	}
+      else if (obj == m_menuBar)
+	{
+	  switch (event->type ())
+	    {
+	    case QEvent::ActionAdded:
+	    case QEvent::ActionRemoved:
+		{
+		  QAction* a = dynamic_cast<QActionEvent*> (event)->action ();
+
+		  if (! a->isSeparator ()
+		      && a->objectName () != "builtinMenu")
+		    // To get the right sizeHint() value in showMenuBar, it
+		    // must be executed *after* action addition and *before*
+		    // action removal.
+		    if (event->type () == QEvent::ActionAdded)
+		      QTimer::singleShot (0, this,
+					  SLOT (updateMenuBar (void)));
+		    else
+		      updateMenuBar ();
+		}
+	      break;
+	    default:
+	      break;
+	    }
+	}
       else
 	{
 	  switch (event->type ())
@@ -401,10 +455,41 @@ bool Figure::eventFilter (QObject* obj, QEvent* event)
 
 //////////////////////////////////////////////////////////////////////////////
 
-void Figure::aboutQtHandles (void)
+void Figure::helpAboutQtHandles (void)
 {
   QMessageBox::about (qWidget<QMainWindow> (), tr ("About QtHandles"),
 		      ABOUT_TEXT);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void Figure::fileNewFigure (void)
+{
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void Figure::fileCloseFigure (void)
+{
+  qWidget<QMainWindow> ()->close ();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void Figure::editCopy (void)
+{
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void Figure::editCut (void)
+{
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void Figure::editPaste (void)
+{
 }
 
 //////////////////////////////////////////////////////////////////////////////

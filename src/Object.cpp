@@ -90,8 +90,19 @@ void Object::slotUpdate (int pId)
 {
   gh_manager::auto_lock lock;
 
-  if (object ().valid_object ())
-    update (pId);
+  switch (pId)
+    {
+    // Special case for objects being deleted, as it's very likely
+    // that the graphics_object already has been destroyed when this
+    // is executed (because of the async behavior).
+    case base_properties::ID_BEINGDELETED:
+      beingDeleted ();
+      break;
+    default:
+      if (object ().valid_object ())
+	update (pId);
+      break;
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -134,6 +145,12 @@ void Object::finalize (void)
 //////////////////////////////////////////////////////////////////////////////
 
 void Object::redraw (void)
+{
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void Object::beingDeleted (void)
 {
 }
 
