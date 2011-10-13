@@ -1,1 +1,4 @@
 autoload ("__shutdown_qt__", "__init_qt__.oct");
+autoload ("__uigetfile_qt__", "__init_qt__.oct");
+autoload ("__uiputfile_qt__", "__init_qt__.oct");
+autoload ("__uigetdir_qt__", "__init_qt__.oct");

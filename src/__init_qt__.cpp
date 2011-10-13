@@ -20,6 +20,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <QApplication>
+#include <QFileDialog>
 #include <QMetaType>
 #include <QPalette>
 
@@ -132,4 +133,190 @@ DEFUN_DLD (__shutdown_qt__, , , "")
     munlock ("__init_qt__");
 
   return octave_value ();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+static QStringList makeFilterSpecs (const Cell& filters)
+{
+  using namespace QtHandles::Utils;
+
+  QStringList filterSpecs;
+
+  for (int i = 0; i < filters.rows (); i++)
+    {
+      QStringList extList =
+        fromStdString (filters(i, 0).string_value ()).split (";");
+      QString desc = fromStdString (filters(i, 1).string_value ()).trimmed ();
+      QString specItem;
+
+      if (desc.endsWith (")"))
+	specItem = desc;
+      else
+	specItem = QString ("%1 (%2)").arg (desc).arg (extList.join (" "));
+
+      filterSpecs.append (specItem);
+    }
+
+  return filterSpecs;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+DEFUN_DLD (__uigetfile_qt__, args, , "")
+{
+  using namespace QtHandles::Utils;
+
+  // Expected arguments:
+  //   args(0) : File filter as a cell array {ext1, name1; ext2, name2; ...}
+  //   args(1) : Dialog title
+  //   args(2) : Default file name
+  //   args(3) : Dialog position [ignored]
+  //   args(4) : Multiselection "on"/"off"
+  //   args(5) : Default directory
+
+  octave_value_list retval (3);
+
+  QString caption = fromStdString (args(1).string_value ());
+  QString defaultDirectory = fromStdString (args(5).string_value ());
+  QString defaultFileName = fromStdString (args(2).string_value ());
+  bool isMultiSelect = (args(4).string_value () == "on");
+
+  if (isMultiSelect)
+    retval(0) = Cell ();
+  else
+    retval(0) = "";
+  retval(1) = "";
+  retval(2) = static_cast<double> (0);
+
+  if (defaultFileName.isEmpty ())
+    defaultFileName = defaultDirectory;
+  else
+    defaultFileName = defaultDirectory + "/" + defaultFileName;
+  
+  QStringList filterSpecs = makeFilterSpecs (args(0).cell_value ());
+
+  if (isMultiSelect)
+    {
+      QString filter;
+      QStringList files =
+        QFileDialog::getOpenFileNames (0, caption, defaultFileName,
+				       filterSpecs.join (";;"), &filter, 0);
+
+      if (! files.isEmpty ())
+	{
+	  Cell cFiles (1, files.length ());
+	  QString dirName;
+	  int i = 0;
+
+	  foreach (const QString& s, files)
+	    {
+	      QFileInfo fi (s);
+
+	      if (dirName.isEmpty ())
+		dirName = fi.canonicalPath ();
+	      cFiles(i++) = toStdString (fi.fileName ());
+	    }
+
+	  retval(0) = cFiles;
+	  retval(1) = toStdString (dirName);
+	  if (! filter.isEmpty ())
+	    retval(2) = static_cast<double> (filterSpecs.indexOf (filter) + 1);
+	}
+    }
+  else
+    {
+      QString filter;
+      QString fileName =
+        QFileDialog::getOpenFileName (0, caption, defaultFileName,
+				      filterSpecs.join (";;"), &filter, 0);
+
+      if (! fileName.isNull ())
+	{
+	  QFileInfo fi (fileName);
+
+	  retval(0) = toStdString (fi.fileName ());
+	  retval(1) = toStdString (fi.canonicalPath ());
+	  if (! filter.isEmpty ())
+	    retval(2) = static_cast<double> (filterSpecs.indexOf (filter) + 1);
+	}
+    }
+
+  return retval;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+DEFUN_DLD (__uiputfile_qt__, args, , "")
+{
+  using namespace QtHandles::Utils;
+
+  // Expected arguments:
+  //   args(0) : File filter as a cell array {ext1, name1; ext2, name2; ...}
+  //   args(1) : Dialog title
+  //   args(2) : Default file name
+  //   args(3) : Dialog position [ignored]
+  //   args(4) : Tag [ignored]
+  //   args(5) : Default directory
+
+  octave_value_list retval (3);
+
+  QString caption = fromStdString (args(1).string_value ());
+  QString defaultDirectory = fromStdString (args(5).string_value ());
+  QString defaultFileName = fromStdString (args(2).string_value ());
+
+  retval(0) = "";
+  retval(1) = "";
+  retval(2) = static_cast<double> (0);
+
+  if (defaultFileName.isEmpty ())
+    defaultFileName = defaultDirectory;
+  else
+    defaultFileName = defaultDirectory + "/" + defaultFileName;
+  
+  QStringList filterSpecs = makeFilterSpecs (args(0).cell_value ());
+
+  QString filter;
+  QString fileName =
+    QFileDialog::getSaveFileName (0, caption, defaultFileName,
+				  filterSpecs.join (";;"), &filter, 0);
+
+  if (! fileName.isNull ())
+    {
+      QFileInfo fi (fileName);
+
+      retval(0) = toStdString (fi.fileName ());
+      if (fi.exists ())
+	retval(1) = toStdString (fi.canonicalPath ());
+      else
+	retval(1) = toStdString (fi.absolutePath ());
+      if (! filter.isEmpty ())
+	retval(2) = static_cast<double> (filterSpecs.indexOf (filter) + 1);
+    }
+
+  return retval;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+DEFUN_DLD (__uigetdir_qt__, args, , "")
+{
+  using namespace QtHandles::Utils;
+
+  // Expected arguments:
+  //   args(0) : Start directory
+  //   args(1) : Dialog title
+
+  octave_value retval ("");
+
+  QString caption = fromStdString (args(1).string_value ());
+  QString defaultDirectory = fromStdString (args(0).string_value ());
+
+  QString dirName = QFileDialog::getExistingDirectory (0, caption,
+						       defaultDirectory);
+
+  if (! dirName.isNull ())
+    retval = toStdString (dirName);
+
+  return retval;
 }
