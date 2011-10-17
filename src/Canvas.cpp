@@ -25,6 +25,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Backend.h"
 #include "Canvas.h"
+#include "ContextMenu.h"
 #include "GLCanvas.h"
 #include "Utils.h"
 
@@ -165,9 +166,9 @@ void Canvas::canvasMousePressEvent (QMouseEvent* event)
 	      if (r.contains (event->posF ()))
 		axesObj = childObj;
 	    }
-	  else if (childObj.isa ("uicontrol"))
+	  else if (childObj.isa ("uicontrol") || childObj.isa ("uipanel"))
 	    {
-	      Matrix bb = childObj.get_properties ().get_boundingbox (true);
+	      Matrix bb = childObj.get_properties ().get_boundingbox (false);
 	      QRectF r (bb(0), bb(1), bb(2), bb(3));
 
 	      r.adjust (-5, -5, 5, 5);
@@ -187,6 +188,10 @@ void Canvas::canvasMousePressEvent (QMouseEvent* event)
 				Utils::figureCurrentPoint (figObj, event),
 				false);
 	  gh_manager::post_callback (uiObj.get_handle (), "buttondownfcn");
+
+	  if (event->button () == Qt::RightButton)
+	    ContextMenu::executeAt (uiObj.get_properties (),
+				    event->globalPos  ());
 
 	  return;
 	}
@@ -216,8 +221,13 @@ void Canvas::canvasMousePressEvent (QMouseEvent* event)
 	    gh_manager::post_callback (axesObj.get_handle (),
 				       "buttondownfcn");
 	  else
-	    gh_manager::post_callback (figObj.get_handle (),
+	    gh_manager::post_callback (obj.get_handle (),
 				       "buttondownfcn");
+	  if (event->button () == Qt::RightButton)
+	    ContextMenu::executeAt ((axesObj
+				     ? axesObj.get_properties ()
+				     : obj.get_properties ()),
+				    event->globalPos ());
 	  break;
 	case RotateMode:
 	case ZoomMode:

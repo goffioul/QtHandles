@@ -22,6 +22,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __QtHandles_Menu__
 #define __QtHandles_Menu__ 1
 
+#include "MenuContainer.h"
 #include "Object.h"
 
 class QAction;
@@ -35,7 +36,7 @@ namespace QtHandles
 
 //////////////////////////////////////////////////////////////////////////////
 
-class Menu : public Object
+class Menu : public Object, public MenuContainer
 {
   Q_OBJECT
 
@@ -47,7 +48,7 @@ public:
 
   Container* innerContainer (void) { return 0; }
 
-  QMenu* menu (void);
+  QWidget* menu (void);
 
 protected:
   void update (int pId);

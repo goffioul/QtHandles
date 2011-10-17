@@ -114,10 +114,14 @@ Figure::Figure (const graphics_object& go, QMainWindow* win)
   else
     m_menuBar->hide ();
 
-  Matrix bb = fp.get_boundingbox ();
+  Matrix bb = fp.get_boundingbox (true);
   win->setGeometry (xround (bb(0)), xround (bb(1)) - offset,
 		    xround (bb(2)), xround (bb(3)) + offset);
   win->setWindowTitle (Utils::fromStdString (fp.get_title ()));
+  QRect r1 = win->geometry ();
+  QRect r2 = win->frameGeometry ();
+  qDebug("%d %d %d %d", r1.x(), r1.y(), r1.width(), r1.height());
+  qDebug("%d %d %d %d", r2.x(), r2.y(), r2.width(), r2.height());
 
   if (fp.is_visible ())
     QTimer::singleShot (0, win, SLOT (show ()));
@@ -238,7 +242,7 @@ void Figure::update (int pId)
     {
     case figure::properties::ID_POSITION:
 	{
-	  Matrix bb = fp.get_boundingbox ();
+	  Matrix bb = fp.get_boundingbox (true);
 	  int offset = 0;
 
 	  if (m_figureToolBar->isVisible ())
@@ -296,6 +300,8 @@ void Figure::showFigureToolBar (bool visible)
       m_figureToolBar->setVisible (visible);
       m_blockUpdates = false;
 
+      updateBoundingBox (false);
+
       if (visible)
 	m_mouseMode = m_lastMouseMode;
       else
@@ -335,6 +341,8 @@ void Figure::showMenuBar (bool visible)
       qWidget<QWidget> ()->setGeometry (r);
       m_menuBar->setVisible (visible);
       m_blockUpdates = false;
+
+      updateBoundingBox (false);
     }
 }
 
@@ -351,35 +359,68 @@ void Figure::updateMenuBar (void)
 
 //////////////////////////////////////////////////////////////////////////////
 
-void Figure::updateBoundingBox (void)
+QWidget* Figure::menu (void)
+{
+  return qWidget<QMainWindow> ()->menuBar ();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+struct UpdateBoundingBoxData
+{
+  Matrix m_bbox;
+  bool m_internal;
+  graphics_handle m_handle;
+};
+
+void Figure::updateBoundingBoxHelper (void* data)
+{
+  gh_manager::auto_lock lock;
+
+  UpdateBoundingBoxData* d = reinterpret_cast<UpdateBoundingBoxData*> (data);
+  graphics_object go = gh_manager::get_object (d->m_handle);
+
+  if (go.valid_object ())
+    {
+      figure::properties& fp = Utils::properties<figure> (go);
+
+      fp.set_boundingbox (d->m_bbox, d->m_internal, false);
+    }
+
+  delete d;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void Figure::updateBoundingBox (bool internal)
 {
   QWidget* win = qWidget<QWidget> ();
+  Matrix bb (1, 4);
 
-  if (win->isVisible ())
+  if (internal)
     {
-      gh_manager::auto_lock lock;
-      graphics_object fig = object ();
+      QPoint pt = win->mapToGlobal (m_container->pos ());
 
-      if (fig.valid_object ())
-	{
-	  figure::properties& fp =
-	    Utils::properties<figure> (fig);
-
-	  Matrix bb (1, 4);
-	  QPoint pt = win->mapToGlobal (m_container->pos ());
-
-	  bb(0) = pt.x ();
-	  bb(1) = pt.y ();
-	  bb(2) = m_container->width ();
-	  bb(3) = m_container->height ();
-
-	  m_blockUpdates = true;
-
-	  fp.set_boundingbox (bb);
-
-	  m_blockUpdates = false;
-	}
+      bb(0) = pt.x ();
+      bb(1) = pt.y ();
+      bb(2) = m_container->width ();
+      bb(3) = m_container->height ();
     }
+  else
+    {
+      bb(0) = win->x ();
+      bb(1) = win->y ();
+      bb(2) = win->frameGeometry ().width ();
+      bb(3) = win->frameGeometry ().height ();
+    }
+
+  UpdateBoundingBoxData* d = new UpdateBoundingBoxData ();
+
+  d->m_bbox = bb;
+  d->m_internal = internal;
+  d->m_handle = m_handle;
+
+  gh_manager::post_function (Figure::updateBoundingBoxHelper, d);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -393,7 +434,7 @@ bool Figure::eventFilter (QObject* obj, QEvent* event)
 	  switch (event->type ())
 	    {
 	    case QEvent::Resize:
-	      updateBoundingBox ();
+	      updateBoundingBox (true);
 	      break;
 	    case QEvent::ChildAdded:
 	      if (dynamic_cast<QChildEvent*> (event)->child
@@ -419,14 +460,16 @@ bool Figure::eventFilter (QObject* obj, QEvent* event)
 
 		  if (! a->isSeparator ()
 		      && a->objectName () != "builtinMenu")
-		    // To get the right sizeHint() value in showMenuBar, it
-		    // must be executed *after* action addition and *before*
-		    // action removal.
-		    if (event->type () == QEvent::ActionAdded)
-		      QTimer::singleShot (0, this,
-					  SLOT (updateMenuBar (void)));
-		    else
-		      updateMenuBar ();
+		    {
+		      // To get the right sizeHint() value in showMenuBar, it
+		      // must be executed *after* action addition and *before*
+		      // action removal.
+		      if (event->type () == QEvent::ActionAdded)
+			QTimer::singleShot (0, this,
+					    SLOT (updateMenuBar (void)));
+		      else
+			updateMenuBar ();
+		    }
 		}
 	      break;
 	    default:
@@ -438,12 +481,23 @@ bool Figure::eventFilter (QObject* obj, QEvent* event)
 	  switch (event->type ())
 	    {
 	    case QEvent::Move:
-	      updateBoundingBox ();
+	      updateBoundingBox (true);
+	      updateBoundingBox (false);
 	      break;
 	    case QEvent::Close:
 	      event->ignore ();
 	      gh_manager::post_callback (m_handle, "closerequestfcn");
 	      return true;
+	    case QEvent::Resize:
+		{
+		  QRect r1 = qWidget<QMainWindow> ()->geometry ();
+		  QRect r2 = qWidget<QMainWindow> ()->frameGeometry ();
+		  qDebug("%d %d %d %d",
+			 r1.x(), r1.y(), r1.width(), r1.height());
+		  qDebug("%d %d %d %d",
+			 r2.x(), r2.y(), r2.width(), r2.height());
+		}
+	      break;
 	    default:
 	      break;
 	    }

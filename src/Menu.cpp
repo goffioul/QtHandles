@@ -95,20 +95,11 @@ Menu::Menu (const graphics_object& go, QAction* action, Object* parent)
       m_separator->setVisible (up.is_visible ());
     }
 
-  Figure* fig = 0;
+  MenuContainer* menuContainer = dynamic_cast<MenuContainer*> (parent);
 
-  if (parent->object ().isa ("figure"))
-    {
-      fig = dynamic_cast<Figure*> (parent);
-      m_parent = parent->qWidget<QMainWindow> ()->menuBar ();
-    }
-  else
-    {
-      Menu* parentMenu = dynamic_cast<Menu*> (parent);
+  if (menuContainer)
+    m_parent = menuContainer->menu ();
 
-      if (parentMenu)
-	m_parent = parentMenu->menu ();
-    }
   if (m_parent)
     {
       int pos = static_cast<int> (up.get_position ());
@@ -154,9 +145,6 @@ Menu::Menu (const graphics_object& go, QAction* action, Object* parent)
 	    up.get_property ("position").set
 	      (octave_value (static_cast<double> (count+1)), true, false);
 	}
-
-      //if (fig)
-	//fig->updateMenuBar ();
     }
 
   connect (action, SIGNAL (triggered (bool)), SLOT (actionTriggered (void)));
@@ -261,7 +249,7 @@ void Menu::update (int pId)
 
 //////////////////////////////////////////////////////////////////////////////
 
-QMenu* Menu::menu (void)
+QWidget* Menu::menu (void)
 {
   QAction* action = qWidget<QAction> ();
   QMenu* _menu = action->menu ();

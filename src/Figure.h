@@ -22,6 +22,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __QtHandles_Figure__
 #define __QtHandles_Figure__ 1
 
+#include "MenuContainer.h"
 #include "Object.h"
 
 class QMainWindow;
@@ -48,7 +49,7 @@ enum MouseMode
 
 class Container;
 
-class Figure : public Object
+class Figure : public Object, public MenuContainer
 {
   Q_OBJECT
 
@@ -61,19 +62,22 @@ public:
   MouseMode mouseMode (void) { return m_mouseMode; }
 
   Container* innerContainer (void);
+  QWidget* menu (void);
 
   bool eventFilter (QObject* watched, QEvent* event);
 
 protected:
   void redraw (void);
   void update (int pId);
-  void updateBoundingBox (void);
+  void updateBoundingBox (bool internal = false);
   void beingDeleted (void);
 
 private:
   void createFigureToolBarAndMenuBar (void);
   void showFigureToolBar (bool visible);
   void showMenuBar (bool visible);
+
+  static void updateBoundingBoxHelper (void*);
 
 private slots:
   void setMouseMode (MouseMode mode) { m_mouseMode = mode; }

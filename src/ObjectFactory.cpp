@@ -27,6 +27,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Backend.h"
 #include "CheckBoxControl.h"
+#include "ContextMenu.h"
 #include "EditControl.h"
 #include "Figure.h"
 #include "ListBoxControl.h"
@@ -118,6 +119,8 @@ void ObjectFactory::createObject (double handle)
 		obj = Panel::create (go);
 	      else if (go.isa ("uimenu"))
 		obj = Menu::create (go);
+	      else if (go.isa ("uicontextmenu"))
+		obj = ContextMenu::create (go);
 	      else
 		qWarning ("ObjectFactory::createObject: unsupported type `%s'",
 			  go.type ().c_str ());

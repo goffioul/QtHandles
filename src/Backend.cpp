@@ -50,7 +50,13 @@ static std::string toolkitObjectProperty (const graphics_object& go)
 {
   if (go.isa ("figure"))
     return std::string ("__plot_stream__");
-  else if (go.isa ("uicontrol") || go.isa ("uipanel") || go.isa ("uimenu"))
+  else if (go.isa ("uicontrol")
+	   || go.isa ("uipanel")
+	   || go.isa ("uimenu")
+	   || go.isa ("uicontextmenu")
+	   || go.isa ("uitoolbar")
+	   || go.isa ("uipushtool")
+	   || go.isa ("uitoggletool"))
     return std::string ("__object__");
   else
     qCritical ("QtHandles::Backend: no __object__ property known for object "
@@ -83,7 +89,8 @@ bool Backend::initialize (const graphics_object& go)
   if (go.isa ("figure")
       || go.isa ("uicontrol")
       || go.isa ("uipanel")
-      || go.isa ("uimenu"))
+      || go.isa ("uimenu")
+      || go.isa ("uicontextmenu"))
     {
       qDebug ("Backend::initialize %s from thread %08x",
 	      go.type ().c_str (), QThread::currentThreadId ());

@@ -15,6 +15,7 @@ SOURCES = \
 	 Canvas.cpp \
 	 CheckBoxControl.cpp \
 	 Container.cpp \
+	 ContextMenu.cpp \
 	 EditControl.cpp \
 	 Figure.cpp \
 	 FigureWindow.cpp \
@@ -43,12 +44,14 @@ HEADERS = \
 	 Canvas.h \
 	 CheckBoxControl.h \
 	 Container.h \
+	 ContextMenu.h \
 	 EditControl.h \
 	 Figure.h \
 	 FigureWindow.h \
 	 GLCanvas.h \
 	 ListBoxControl.h \
 	 Menu.h \
+	 MenuContainer.h \
 	 MouseModeActionGroup.h \
 	 Object.h \
 	 ObjectFactory.h \

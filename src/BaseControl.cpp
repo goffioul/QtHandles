@@ -24,6 +24,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <QWidget>
 
 #include "BaseControl.h"
+#include "ContextMenu.h"
 #include "Utils.h"
 
 //////////////////////////////////////////////////////////////////////////////
@@ -183,6 +184,9 @@ bool BaseControl::eventFilter (QObject* watched, QEvent* event)
 	      gh_manager::post_callback (fig.get_handle (),
 					 "windowbuttondownfcn");
 	      gh_manager::post_callback (m_handle, "buttondownfcn");
+
+	      if (m->button () == Qt::RightButton)
+		ContextMenu::executeAt (up, m->globalPos ());
 	    }
 	  else
 	    {

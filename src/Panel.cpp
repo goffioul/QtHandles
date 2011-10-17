@@ -22,10 +22,12 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <QEvent>
 #include <QFrame>
 #include <QLabel>
+#include <QMouseEvent>
 #include <QTimer>
 
 #include "Canvas.h"
 #include "Container.h"
+#include "ContextMenu.h"
 #include "Panel.h"
 #include "Utils.h"
 
@@ -177,6 +179,18 @@ bool Panel::eventFilter (QObject* watched, QEvent* event)
 			    }
 			}
 		      updateLayout ();
+		    }
+		}
+	      break;
+	    case QEvent::MouseButtonPress:
+		{
+		  QMouseEvent* m = dynamic_cast<QMouseEvent*> (event);
+
+		  if (m->button () == Qt::RightButton)
+		    {
+		      gh_manager::auto_lock lock;
+
+		      ContextMenu::executeAt (properties (), m->globalPos ());
 		    }
 		}
 	      break;
