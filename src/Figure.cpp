@@ -118,10 +118,6 @@ Figure::Figure (const graphics_object& go, QMainWindow* win)
   win->setGeometry (xround (bb(0)), xround (bb(1)) - offset,
 		    xround (bb(2)), xround (bb(3)) + offset);
   win->setWindowTitle (Utils::fromStdString (fp.get_title ()));
-  QRect r1 = win->geometry ();
-  QRect r2 = win->frameGeometry ();
-  qDebug("%d %d %d %d", r1.x(), r1.y(), r1.width(), r1.height());
-  qDebug("%d %d %d %d", r2.x(), r2.y(), r2.width(), r2.height());
 
   if (fp.is_visible ())
     QTimer::singleShot (0, win, SLOT (show ()));
@@ -489,14 +485,7 @@ bool Figure::eventFilter (QObject* obj, QEvent* event)
 	      gh_manager::post_callback (m_handle, "closerequestfcn");
 	      return true;
 	    case QEvent::Resize:
-		{
-		  QRect r1 = qWidget<QMainWindow> ()->geometry ();
-		  QRect r2 = qWidget<QMainWindow> ()->frameGeometry ();
-		  qDebug("%d %d %d %d",
-			 r1.x(), r1.y(), r1.width(), r1.height());
-		  qDebug("%d %d %d %d",
-			 r2.x(), r2.y(), r2.width(), r2.height());
-		}
+	      updateBoundingBox (false);
 	      break;
 	    default:
 	      break;
