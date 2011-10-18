@@ -41,6 +41,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "SliderControl.h"
 #include "TextControl.h"
 #include "ToggleButtonControl.h"
+#include "ToolBar.h"
 #include "Utils.h"
 
 //////////////////////////////////////////////////////////////////////////////
@@ -121,6 +122,8 @@ void ObjectFactory::createObject (double handle)
 		obj = Menu::create (go);
 	      else if (go.isa ("uicontextmenu"))
 		obj = ContextMenu::create (go);
+	      else if (go.isa ("uitoolbar"))
+		obj = ToolBar::create (go);
 	      else
 		qWarning ("ObjectFactory::createObject: unsupported type `%s'",
 			  go.type ().c_str ());

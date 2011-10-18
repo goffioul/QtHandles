@@ -90,7 +90,10 @@ bool Backend::initialize (const graphics_object& go)
       || go.isa ("uicontrol")
       || go.isa ("uipanel")
       || go.isa ("uimenu")
-      || go.isa ("uicontextmenu"))
+      || go.isa ("uicontextmenu")
+      || go.isa ("uitoolbar")
+      /*|| go.isa ("uipushtool")
+      || go.isa ("uitoggletool")*/)
     {
       qDebug ("Backend::initialize %s from thread %08x",
 	      go.type ().c_str (), QThread::currentThreadId ());
@@ -117,6 +120,11 @@ void Backend::update (const graphics_object& go, int pId)
   if (pId == figure::properties::ID___PLOT_STREAM__
       || pId == uicontrol::properties::ID___OBJECT__
       || pId == uipanel::properties::ID___OBJECT__
+      || pId == uimenu::properties::ID___OBJECT__
+      || pId == uicontextmenu::properties::ID___OBJECT__
+      || pId == uitoolbar::properties::ID___OBJECT__
+      || pId == uipushtool::properties::ID___OBJECT__
+      || pId == uitoggletool::properties::ID___OBJECT__
       || pId == base_properties::ID___MODIFIED__)
     return;
 

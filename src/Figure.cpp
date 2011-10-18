@@ -537,4 +537,54 @@ void Figure::editPaste (void)
 
 //////////////////////////////////////////////////////////////////////////////
 
+void Figure::addCustomToolBar (QToolBar* bar, bool visible)
+{
+  QMainWindow* win = qWidget<QMainWindow> ();
+
+  if (! visible)
+    win->addToolBar (bar);
+  else
+    {
+      QSize sz = bar->sizeHint ();
+      QRect r = win->geometry ();
+
+      r.adjust (0, -sz.height (), 0, 0);
+
+      m_blockUpdates = true;
+      win->setGeometry (r);
+      win->addToolBarBreak ();
+      win->addToolBar (bar);
+      m_blockUpdates = false;
+
+      updateBoundingBox (false);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void Figure::showCustomToolBar (QToolBar* bar, bool visible)
+{
+  QMainWindow* win = qWidget<QMainWindow> ();
+
+  if (bar->isVisible () != visible)
+    {
+      QSize sz = bar->sizeHint ();
+      QRect r = win->geometry ();
+
+      if (visible)
+	r.adjust (0, -sz.height (), 0, 0);
+      else
+	r.adjust (0, sz.height (), 0, 0);
+
+      m_blockUpdates = true;
+      win->setGeometry (r);
+      bar->setVisible (visible);
+      m_blockUpdates = false;
+
+      updateBoundingBox (false);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
 }; // namespace QtHandles

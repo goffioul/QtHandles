@@ -34,6 +34,7 @@ SOURCES = \
 	 TextControl.cpp \
 	 TextEdit.cpp \
 	 ToggleButtonControl.cpp \
+	 ToolBar.cpp \
 	 Utils.cpp
 
 HEADERS = \
@@ -64,6 +65,7 @@ HEADERS = \
 	 TextControl.h \
 	 TextEdit.h \
 	 ToggleButtonControl.h \
+	 ToolBar.h \
 	 Utils.h
 
 RESOURCES = qthandles.qrc

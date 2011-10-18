@@ -48,10 +48,13 @@ enum MouseMode
 //////////////////////////////////////////////////////////////////////////////
 
 class Container;
+class ToolBar;
 
 class Figure : public Object, public MenuContainer
 {
   Q_OBJECT
+
+  friend class ToolBar;
 
 public:
   Figure (const graphics_object& go, QMainWindow* win);
@@ -76,6 +79,8 @@ private:
   void createFigureToolBarAndMenuBar (void);
   void showFigureToolBar (bool visible);
   void showMenuBar (bool visible);
+  void addCustomToolBar (QToolBar* bar, bool visible);
+  void showCustomToolBar (QToolBar* bar, bool visible);
 
   static void updateBoundingBoxHelper (void*);
 
