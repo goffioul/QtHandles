@@ -29,11 +29,13 @@ SOURCES = \
 	 Panel.cpp \
 	 PopupMenuControl.cpp \
 	 PushButtonControl.cpp \
+	 PushTool.cpp \
 	 RadioButtonControl.cpp \
 	 SliderControl.cpp \
 	 TextControl.cpp \
 	 TextEdit.cpp \
 	 ToggleButtonControl.cpp \
+	 ToggleTool.cpp \
 	 ToolBar.cpp \
 	 Utils.cpp
 
@@ -60,15 +62,19 @@ HEADERS = \
 	 Panel.h \
 	 PopupMenuControl.h \
 	 PushButtonControl.h \
+	 PushTool.h \
 	 RadioButtonControl.h \
 	 SliderControl.h \
 	 TextControl.h \
 	 TextEdit.h \
 	 ToggleButtonControl.h \
+	 ToggleTool.h \
 	 ToolBar.h \
 	 Utils.h
 
 RESOURCES = qthandles.qrc
+
+DISTFILES += ToolBarButton.h ToolBarButton.cpp
 
 win32:TOPLEVELTARGET = ..\\$(QMAKE_TARGET).oct
 !win32:TOPLEVELTARGET = ../$(QMAKE_TARGET).oct

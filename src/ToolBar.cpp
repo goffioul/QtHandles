@@ -143,12 +143,12 @@ bool ToolBar::eventFilter (QObject* watched, QEvent* event)
 		{
 		  if (event->type () == QEvent::ActionAdded)
 		    {
-		      if (bar->actions ().size () == 1)
+		      if (bar->actions ().size () == 2)
 			QTimer::singleShot (0, this, SLOT (hideEmpty (void)));
 		    }
 		  else
 		    {
-		      if (bar->actions ().size () == 2)
+		      if (bar->actions ().size () == 1)
 			m_empty->setVisible (true);
 		    }
 		}

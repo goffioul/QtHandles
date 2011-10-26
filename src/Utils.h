@@ -24,6 +24,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QColor>
 #include <QFont>
+#include <QImage>
 #include <QString>
 #include <QStringList>
 
@@ -72,6 +73,9 @@ namespace Utils
   inline typename T::properties&
   properties (const graphics_handle& h)
     { return Utils::properties<T> (gh_manager::get_object (h)); }
+
+  QImage makeImageFromCData (const octave_value& v, int width = -1,
+			     int height = -1);
 };
 
 //////////////////////////////////////////////////////////////////////////////

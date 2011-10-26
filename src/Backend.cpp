@@ -92,8 +92,8 @@ bool Backend::initialize (const graphics_object& go)
       || go.isa ("uimenu")
       || go.isa ("uicontextmenu")
       || go.isa ("uitoolbar")
-      /*|| go.isa ("uipushtool")
-      || go.isa ("uitoggletool")*/)
+      || go.isa ("uipushtool")
+      || go.isa ("uitoggletool"))
     {
       qDebug ("Backend::initialize %s from thread %08x",
 	      go.type ().c_str (), QThread::currentThreadId ());

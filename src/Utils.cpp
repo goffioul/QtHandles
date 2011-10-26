@@ -231,6 +231,83 @@ Qt::Alignment fromHVAlign (const caseless_str& halign,
 
 //////////////////////////////////////////////////////////////////////////////
 
+QImage makeImageFromCData (const octave_value& v, int width, int height)
+{
+  dim_vector dv (v.dims ());
+
+  if (dv.length () == 3 && dv(2) == 3)
+    {
+      int w = qMin (dv(1), width);
+      int h = qMin (dv(0), height);
+
+      int x_off = (w < width ? (width - w) / 2 : 0);
+      int y_off = (h < height ? (height - h) / 2 : 0);
+
+      QImage img (width, height, QImage::Format_ARGB32);
+      img.fill (qRgba (0, 0, 0, 0));
+
+      if (v.is_uint8_type ())
+	{
+	  uint8NDArray d = v.uint8_array_value ();
+
+	  for (int i = 0; i < w; i++)
+	    for (int j = 0; j < h; j++)
+	      {
+		int r = d(j, i, 0);
+		int g = d(j, i, 1);
+		int b = d(j, i, 2);
+		int a = 255;
+
+		img.setPixel (x_off + i, y_off + j, qRgba (r, g, b, a));
+	      }
+	}
+      else if (v.is_single_type ())
+	{
+	  FloatNDArray f = v.float_array_value ();
+
+	  for (int i = 0; i < w; i++)
+	    for (int j = 0; j < h; j++)
+	      {
+		float r = f(j, i, 0);
+		float g = f(j, i, 1);
+		float b = f(j, i, 2);
+		int a = (xisnan (r) || xisnan (g) || xisnan (b) ? 0 : 255);
+
+		img.setPixel (x_off + i, y_off + j,
+			      qRgba (xround (r * 255),
+				     xround (g * 255),
+				     xround (b * 255),
+				     a));
+	      }
+	}
+      else if (v.is_real_type ())
+	{
+	  NDArray d = v.array_value ();
+
+	  for (int i = 0; i < w; i++)
+	    for (int j = 0; j < h; j++)
+	      {
+		double r = d(j, i, 0);
+		double g = d(j, i, 1);
+		double b = d(j, i, 2);
+		int a = (xisnan (r) || xisnan (g) || xisnan (b) ? 0 : 255);
+
+		img.setPixel (x_off + i, y_off + j,
+			      qRgba (xround (r * 255),
+				     xround (g * 255),
+				     xround (b * 255),
+				     a));
+	      }
+	}
+
+      return img;
+    }
+
+  return QImage ();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
 }; // namespace Utils
 
 //////////////////////////////////////////////////////////////////////////////

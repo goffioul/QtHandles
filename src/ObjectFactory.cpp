@@ -37,10 +37,12 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "Panel.h"
 #include "PopupMenuControl.h"
 #include "PushButtonControl.h"
+#include "PushTool.h"
 #include "RadioButtonControl.h"
 #include "SliderControl.h"
 #include "TextControl.h"
 #include "ToggleButtonControl.h"
+#include "ToggleTool.h"
 #include "ToolBar.h"
 #include "Utils.h"
 
@@ -124,6 +126,10 @@ void ObjectFactory::createObject (double handle)
 		obj = ContextMenu::create (go);
 	      else if (go.isa ("uitoolbar"))
 		obj = ToolBar::create (go);
+	      else if (go.isa ("uipushtool"))
+		obj = PushTool::create (go);
+	      else if (go.isa ("uitoggletool"))
+		obj = ToggleTool::create (go);
 	      else
 		qWarning ("ObjectFactory::createObject: unsupported type `%s'",
 			  go.type ().c_str ());
