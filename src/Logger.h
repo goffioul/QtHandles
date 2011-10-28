@@ -24,6 +24,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstdarg>
 
+class QMutex;
+
 //////////////////////////////////////////////////////////////////////////////
 
 namespace QtHandles
@@ -40,6 +42,7 @@ private:
   bool m_debugEnabled;
 
   static Logger* s_instance;
+  static QMutex* s_mutex;
 
 private:
   Logger (void);

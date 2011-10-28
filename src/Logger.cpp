@@ -19,6 +19,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
+#include <QMutex>
+#include <QMutexLocker>
 #include <QProcessEnvironment>
 
 #include <cstdio>
@@ -33,6 +35,7 @@ namespace QtHandles
 //////////////////////////////////////////////////////////////////////////////
 
 Logger* Logger::s_instance = 0;
+QMutex* Logger::s_mutex = 0;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -56,7 +59,10 @@ Logger::~Logger (void)
 Logger* Logger::instance (void)
 {
   if (! s_instance)
-    s_instance = new Logger ();
+    {
+      s_instance = new Logger ();
+      s_mutex = new QMutex ();
+    }
 
   return s_instance;
 }
@@ -66,6 +72,7 @@ Logger* Logger::instance (void)
 #define STATIC_LOGGER(fun) \
 void Logger::fun (const char* fmt, ...) \
 { \
+  QMutexLocker lock (s_mutex); \
   va_list vl; \
   va_start (vl, fmt); \
   instance ()->fun ## V (fmt, vl); \
