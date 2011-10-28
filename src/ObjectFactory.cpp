@@ -31,6 +31,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "EditControl.h"
 #include "Figure.h"
 #include "ListBoxControl.h"
+#include "Logger.h"
 #include "Menu.h"
 #include "ObjectFactory.h"
 #include "ObjectProxy.h"
@@ -86,9 +87,9 @@ void ObjectFactory::createObject (double handle)
 
 	  if (proxy)
 	    {
-	      qDebug ("ObjectFactory::createObject: "
-		      "create %s from thread %08x",
-		      go.type ().c_str (), QThread::currentThreadId ());
+	      Logger::debug ("ObjectFactory::createObject: "
+			     "create %s from thread %08x",
+			     go.type ().c_str (), QThread::currentThreadId ());
 
 	      Object* obj = 0;
 

@@ -25,6 +25,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdint.h>
 
 #include "Backend.h"
+#include "Logger.h"
 #include "Object.h"
 #include "ObjectFactory.h"
 #include "ObjectProxy.h"
@@ -95,8 +96,8 @@ bool Backend::initialize (const graphics_object& go)
       || go.isa ("uipushtool")
       || go.isa ("uitoggletool"))
     {
-      qDebug ("Backend::initialize %s from thread %08x",
-	      go.type ().c_str (), QThread::currentThreadId ());
+      Logger::debug ("Backend::initialize %s from thread %08x",
+		     go.type ().c_str (), QThread::currentThreadId ());
 
       ObjectProxy* proxy = new ObjectProxy ();
       graphics_object gObj (go);
@@ -128,8 +129,8 @@ void Backend::update (const graphics_object& go, int pId)
       || pId == base_properties::ID___MODIFIED__)
     return;
 
-  qDebug ("Backend::update %s(%d) from thread %08x",
-	  go.type ().c_str (), pId, QThread::currentThreadId ());
+  Logger::debug ("Backend::update %s(%d) from thread %08x",
+		 go.type ().c_str (), pId, QThread::currentThreadId ());
 
   ObjectProxy* proxy = toolkitObjectProxy (go);
 
@@ -153,8 +154,8 @@ void Backend::update (const graphics_object& go, int pId)
 
 void Backend::finalize (const graphics_object& go)
 {
-  qDebug ("Backend::finalize %s from thread %08x",
-	  go.type ().c_str (), QThread::currentThreadId ());
+  Logger::debug ("Backend::finalize %s from thread %08x",
+		 go.type ().c_str (), QThread::currentThreadId ());
 
   ObjectProxy* proxy = toolkitObjectProxy (go);
 

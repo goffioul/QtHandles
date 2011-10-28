@@ -21,6 +21,7 @@ SOURCES = \
 	 FigureWindow.cpp \
 	 GLCanvas.cpp \
 	 ListBoxControl.cpp \
+	 Logger.cpp \
 	 Menu.cpp \
 	 MouseModeActionGroup.cpp \
 	 Object.cpp \
@@ -53,6 +54,7 @@ HEADERS = \
 	 FigureWindow.h \
 	 GLCanvas.h \
 	 ListBoxControl.h \
+	 Logger.h \
 	 Menu.h \
 	 MenuContainer.h \
 	 MouseModeActionGroup.h \
