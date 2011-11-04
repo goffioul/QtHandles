@@ -249,7 +249,7 @@ void Canvas::canvasMousePressEvent (QMouseEvent* event)
 		    case Qt::RightButton:
 		      Utils::properties<axes> (axesObj).unzoom ();
 		      break;
-		    case Qt::MiddleButton:
+		    case Qt::MidButton:
 			{
 			  axes::properties& ap =
 			    Utils::properties<axes> (axesObj);
@@ -307,6 +307,36 @@ void Canvas::canvasMouseReleaseEvent (QMouseEvent* event)
 
   m_mouseAxes = graphics_handle ();
   m_mouseMode = NoMode;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+bool Canvas::canvasKeyPressEvent (QKeyEvent* event)
+{
+  if (m_eventMask & KeyPress)
+    {
+      gh_manager::post_callback (m_handle, "keypressfcn",
+                                 Utils::makeKeyEventStruct (event));
+
+      return true;
+    }
+
+  return false;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+bool Canvas::canvasKeyReleaseEvent (QKeyEvent* event)
+{
+  if (! event->isAutoRepeat () && (m_eventMask & KeyRelease))
+    {
+      gh_manager::post_callback (m_handle, "keyreleasefcn",
+                                 Utils::makeKeyEventStruct (event));
+
+      return true;
+    }
+
+  return false;
 }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -20,13 +20,17 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <QApplication>
+#include <QKeyEvent>
 #include <QMouseEvent>
+
+#include <list>
 
 #include <octave/oct.h>
 #include <octave/graphics.h>
 
 #include "Backend.h"
 #include "Container.h"
+#include "KeyMap.h"
 #include "Object.h"
 #include "Utils.h"
 
@@ -304,6 +308,38 @@ QImage makeImageFromCData (const octave_value& v, int width, int height)
     }
 
   return QImage ();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+octave_scalar_map makeKeyEventStruct (QKeyEvent* event)
+{
+  octave_scalar_map retval;
+
+  retval.setfield ("Key", KeyMap::qKeyToKeyString (event->key ()));
+  retval.setfield ("Character", toStdString (event->text ()));
+
+  std::list<std::string> modList;
+  Qt::KeyboardModifiers mods = event->modifiers ();
+
+  if (mods & Qt::ShiftModifier)
+    modList.push_back ("shift");
+  if (mods & Qt::ControlModifier)
+#ifdef Q_OS_MAC
+    modList.push_back ("command");
+#else
+    modList.push_back ("control");
+#endif
+  if (mods & Qt::AltModifier)
+    modList.push_back ("alt");
+#ifdef Q_OS_MAC
+  if (mods & Qt::MetaModifier)
+    modList.push_back ("control");
+#endif
+
+  retval.setfield ("Modifier", Cell (modList));
+
+  return retval;
 }
 
 //////////////////////////////////////////////////////////////////////////////

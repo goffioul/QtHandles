@@ -35,6 +35,7 @@ namespace QtHandles
 GLCanvas::GLCanvas (QWidget* parent, const graphics_handle& handle)
   : QGLWidget (parent), Canvas (handle)
 {
+  setFocusPolicy (Qt::ClickFocus);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -124,6 +125,22 @@ void GLCanvas::mousePressEvent (QMouseEvent* event)
 void GLCanvas::mouseReleaseEvent (QMouseEvent* event)
 {
   canvasMouseReleaseEvent (event);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void GLCanvas::keyPressEvent (QKeyEvent* event)
+{
+  if (! canvasKeyPressEvent (event))
+    QGLWidget::keyPressEvent (event);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void GLCanvas::keyReleaseEvent (QKeyEvent* event)
+{
+  if (! canvasKeyReleaseEvent (event))
+    QGLWidget::keyReleaseEvent (event);
 }
 
 //////////////////////////////////////////////////////////////////////////////

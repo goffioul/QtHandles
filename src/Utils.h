@@ -33,6 +33,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <octave/oct.h>
 #include <octave/graphics.h>
 
+class QKeyEvent;
 class QMouseEvent;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -76,6 +77,8 @@ namespace Utils
 
   QImage makeImageFromCData (const octave_value& v, int width = -1,
 			     int height = -1);
+
+  octave_scalar_map makeKeyEventStruct (QKeyEvent* event);
 };
 
 //////////////////////////////////////////////////////////////////////////////

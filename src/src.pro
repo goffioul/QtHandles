@@ -20,6 +20,7 @@ SOURCES = \
 	 Figure.cpp \
 	 FigureWindow.cpp \
 	 GLCanvas.cpp \
+	 KeyMap.cpp \
 	 ListBoxControl.cpp \
 	 Logger.cpp \
 	 Menu.cpp \
@@ -53,6 +54,7 @@ HEADERS = \
 	 Figure.h \
 	 FigureWindow.h \
 	 GLCanvas.h \
+	 KeyMap.h \
 	 ListBoxControl.h \
 	 Logger.h \
 	 Menu.h \

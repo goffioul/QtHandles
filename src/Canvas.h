@@ -29,6 +29,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Figure.h"
 
+class QKeyEvent;
 class QMouseEvent;
 class QWidget;
 
@@ -42,10 +43,21 @@ namespace QtHandles
 class Canvas
 {
 public:
+  enum EventMask
+    {
+      KeyPress   = 0x01,
+      KeyRelease = 0x02
+    };
+
+public:
   virtual ~Canvas (void) { }
 
   void redraw (bool sync = false);
   void blockRedraw (bool block = true);
+
+  void addEventMask (int m) { m_eventMask |= m; }
+  void clearEventMask (int m) { m_eventMask &= (~m); }
+  void setEventMask (int m) { m_eventMask = m; }
 
   virtual QWidget* qWidget (void) = 0;
 
@@ -61,13 +73,16 @@ protected:
   Canvas (const graphics_handle& handle)
     : m_handle (handle),
       m_redrawBlocked (false),
-      m_mouseMode (NoMode)
+      m_mouseMode (NoMode),
+      m_eventMask (0)
     { }
 
   void canvasPaintEvent (void);
   void canvasMouseMoveEvent (QMouseEvent* event);
   void canvasMousePressEvent (QMouseEvent* event);
   void canvasMouseReleaseEvent (QMouseEvent* event);
+  bool canvasKeyPressEvent (QKeyEvent* event);
+  bool canvasKeyReleaseEvent (QKeyEvent* event);
 
 private:
   graphics_handle m_handle;
@@ -76,6 +91,7 @@ private:
   QPoint m_mouseAnchor;
   QPoint m_mouseCurrent;
   graphics_handle m_mouseAxes;
+  int m_eventMask;
 };
 
 //////////////////////////////////////////////////////////////////////////////

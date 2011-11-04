@@ -119,6 +119,13 @@ Figure::Figure (const graphics_object& go, QMainWindow* win)
 		    xround (bb(2)), xround (bb(3)) + offset);
   win->setWindowTitle (Utils::fromStdString (fp.get_title ()));
 
+  int eventMask = 0;
+  if (! fp.get_keypressfcn ().is_empty ())
+    eventMask |= Canvas::KeyPress;
+  if (! fp.get_keyreleasefcn ().is_empty ())
+    eventMask |= Canvas::KeyRelease;
+  m_container->canvas (m_handle)->setEventMask (eventMask);
+
   if (fp.is_visible ())
     QTimer::singleShot (0, win, SLOT (show ()));
   else
@@ -269,6 +276,18 @@ void Figure::update (int pId)
       break;
     case figure::properties::ID_MENUBAR:
       showMenuBar (fp.menubar_is ("figure"));
+      break;
+    case figure::properties::ID_KEYPRESSFCN:
+      if (fp.get_keypressfcn ().is_empty ())
+        m_container->canvas (m_handle)->clearEventMask (Canvas::KeyPress);
+      else
+        m_container->canvas (m_handle)->addEventMask (Canvas::KeyPress);
+      break;
+    case figure::properties::ID_KEYRELEASEFCN:
+      if (fp.get_keyreleasefcn ().is_empty ())
+        m_container->canvas (m_handle)->clearEventMask (Canvas::KeyRelease);
+      else
+        m_container->canvas (m_handle)->addEventMask (Canvas::KeyRelease);
       break;
     default:
       break;
