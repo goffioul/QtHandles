@@ -41,6 +41,8 @@ ToggleTool* ToggleTool::create (const graphics_object& go)
       if (parentWidget)
 	return new ToggleTool (go, new QAction (parentWidget));
     }
+
+  return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////
