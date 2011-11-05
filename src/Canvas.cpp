@@ -315,8 +315,11 @@ bool Canvas::canvasKeyPressEvent (QKeyEvent* event)
 {
   if (m_eventMask & KeyPress)
     {
-      gh_manager::post_callback (m_handle, "keypressfcn",
-                                 Utils::makeKeyEventStruct (event));
+      octave_scalar_map eventData = Utils::makeKeyEventStruct (event);
+
+      gh_manager::post_set (m_handle, "currentcharacter",
+                            eventData.getfield ("Character"), false);
+      gh_manager::post_callback (m_handle, "keypressfcn", eventData);
 
       return true;
     }

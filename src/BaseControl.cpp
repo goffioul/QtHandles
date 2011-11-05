@@ -20,6 +20,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <QEvent>
+#include <QKeyEvent>
 #include <QMouseEvent>
 #include <QWidget>
 
@@ -69,7 +70,7 @@ static void updatePalette (const uicontrol::properties& props, QWidget* w)
 //////////////////////////////////////////////////////////////////////////////
 
 BaseControl::BaseControl (const graphics_object& go, QWidget* w)
-  : Object (go, w), m_normalizedFont (false)
+  : Object (go, w), m_normalizedFont (false), m_keyPressHandlerDefined (false)
 {
   init (w);
 }
@@ -91,6 +92,7 @@ void BaseControl::init (QWidget* w, bool callBase)
   w->setEnabled (up.enable_is ("on"));
   w->setToolTip (Utils::fromStdString (up.get_tooltipstring ()));
   w->setVisible (up.is_visible ());
+  m_keyPressHandlerDefined = ! up.get_keypressfcn ().is_empty ();
 
   w->installEventFilter (this);
 
@@ -143,6 +145,9 @@ void BaseControl::update (int pId)
       break;
     case base_properties::ID_VISIBLE:
       w->setVisible (up.is_visible ());
+      break;
+    case uicontrol::properties::ID_KEYPRESSFCN:
+      m_keyPressHandlerDefined = ! up.get_keypressfcn ().is_empty ();
       break;
     default:
       break;
@@ -198,6 +203,20 @@ bool BaseControl::eventFilter (QObject* watched, QEvent* event)
 				      octave_value ("normal"), false);
 	    }
 	}
+      break;
+    case QEvent::KeyPress:
+      if (m_keyPressHandlerDefined)
+        {
+          gh_manager::auto_lock lock;
+
+          octave_scalar_map keyData =
+            Utils::makeKeyEventStruct (dynamic_cast<QKeyEvent*> (event));
+          graphics_object fig = object ().get_ancestor ("figure");
+
+          gh_manager::post_set (fig.get_handle (), "currentcharacter",
+                                keyData.getfield ("Character"), false);
+          gh_manager::post_callback (m_handle, "keypressfcn", keyData);
+        }
       break;
     default: break;
     }
