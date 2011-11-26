@@ -20,9 +20,11 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <QApplication>
+#include <QDir>
 #include <QFileDialog>
 #include <QMetaType>
 #include <QPalette>
+#include <QRegExp>
 
 #include <octave/oct.h>
 #include <octave/graphics.h>
@@ -142,6 +144,7 @@ static QStringList makeFilterSpecs (const Cell& filters)
   using namespace QtHandles::Utils;
 
   QStringList filterSpecs;
+  QRegExp parenRe (" ?\\(.*\\)\\s*$");
 
   for (int i = 0; i < filters.rows (); i++)
     {
@@ -150,15 +153,29 @@ static QStringList makeFilterSpecs (const Cell& filters)
       QString desc = fromStdString (filters(i, 1).string_value ()).trimmed ();
       QString specItem;
 
-      if (desc.endsWith (")"))
-	specItem = desc;
-      else
-	specItem = QString ("%1 (%2)").arg (desc).arg (extList.join (" "));
+      if (desc.contains (parenRe))
+        {
+          // We need to strip any existing parenthesis and recreate it.
+          // In case the format specified in the () section is not correct,
+          // the filters won't work as expected.
+          desc.remove (parenRe);
+        }
+
+      specItem = QString ("%1 (%2)").arg (desc).arg (extList.join (" "));
 
       filterSpecs.append (specItem);
     }
 
   return filterSpecs;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+static QString appendDirSep (const QString& d)
+{
+  if (! d.endsWith ("/") && ! d.endsWith (QDir::separator ()))
+    return (d + "/");
+  return d;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -214,7 +231,7 @@ DEFUN_DLD (__uigetfile_qt__, args, , "")
 	      QFileInfo fi (s);
 
 	      if (dirName.isEmpty ())
-		dirName = fi.canonicalPath ();
+		dirName = appendDirSep (fi.canonicalPath ());
 	      cFiles(i++) = toStdString (fi.fileName ());
 	    }
 
@@ -236,7 +253,7 @@ DEFUN_DLD (__uigetfile_qt__, args, , "")
 	  QFileInfo fi (fileName);
 
 	  retval(0) = toStdString (fi.fileName ());
-	  retval(1) = toStdString (fi.canonicalPath ());
+	  retval(1) = toStdString (appendDirSep (fi.canonicalPath ()));
 	  if (! filter.isEmpty ())
 	    retval(2) = static_cast<double> (filterSpecs.indexOf (filter) + 1);
 	}
@@ -287,9 +304,9 @@ DEFUN_DLD (__uiputfile_qt__, args, , "")
 
       retval(0) = toStdString (fi.fileName ());
       if (fi.exists ())
-	retval(1) = toStdString (fi.canonicalPath ());
+	retval(1) = toStdString (appendDirSep (fi.canonicalPath ()));
       else
-	retval(1) = toStdString (fi.absolutePath ());
+	retval(1) = toStdString (appendDirSep (fi.absolutePath ()));
       if (! filter.isEmpty ())
 	retval(2) = static_cast<double> (filterSpecs.indexOf (filter) + 1);
     }
