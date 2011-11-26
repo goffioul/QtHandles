@@ -47,6 +47,9 @@ protected:
 private slots:
   void clicked (void);
   void toggled (bool checked);
+
+private:
+  bool m_blockCallback;
 };
 
 //////////////////////////////////////////////////////////////////////////////

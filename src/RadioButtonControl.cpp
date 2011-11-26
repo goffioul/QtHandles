@@ -54,7 +54,7 @@ RadioButtonControl::RadioButtonControl (const graphics_object& go,
     : ButtonControl (go, radio)
 {
   radio->setAutoFillBackground (true);
-  //radio->setAutoExclusive (false);
+  radio->setAutoExclusive (false);
 }
 
 //////////////////////////////////////////////////////////////////////////////

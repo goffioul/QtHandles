@@ -33,7 +33,7 @@ namespace QtHandles
 //////////////////////////////////////////////////////////////////////////////
 
 ButtonControl::ButtonControl (const graphics_object& go, QAbstractButton* btn)
-    : BaseControl (go, btn)
+    : BaseControl (go, btn), m_blockCallback (false)
 {
   uicontrol::properties& up = properties<uicontrol> ();
 
@@ -71,6 +71,7 @@ void ButtonControl::update (int pId)
       btn->setText (Utils::fromStdString (up.get_string_string ()));
       break;
     case uicontrol::properties::ID_VALUE:
+      m_blockCallback = true;
       if (btn->isCheckable ())
 	{
 	  Matrix value = up.get_value ().matrix_value ();
@@ -85,6 +86,7 @@ void ButtonControl::update (int pId)
 		btn->setChecked (true);
 	    }
 	}
+      m_blockCallback = false;
       break;
     default:
       BaseControl::update (pId);
@@ -98,7 +100,7 @@ void ButtonControl::toggled (bool checked)
 {
   QAbstractButton* btn = qWidget<QAbstractButton> ();
 
-  if (btn->isCheckable ())
+  if (! m_blockCallback && btn->isCheckable ())
     {
       gh_manager::auto_lock lock;
 

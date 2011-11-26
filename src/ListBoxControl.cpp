@@ -32,6 +32,35 @@ namespace QtHandles
 
 //////////////////////////////////////////////////////////////////////////////
 
+static void updateSelection (QListWidget* list, const Matrix& value)
+{
+  octave_idx_type n = value.numel ();
+  int lc = list->count ();
+
+  list->clearSelection ();
+
+  for (octave_idx_type i = 0; i < n; i++)
+    {
+      int idx = xround (value(i));
+
+      if (1 <= idx && idx <= lc)
+        {
+          list->item (idx-1)->setSelected (true);
+          if (i == 0
+              && list->selectionMode () == QAbstractItemView::SingleSelection)
+            break;
+        }
+      else
+        {
+          // Invalid selection.
+          list->clearSelection ();
+          break;
+        }
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
 ListBoxControl* ListBoxControl::create (const graphics_object& go)
 {
   Object* parent = Object::parentObject (go);
@@ -50,7 +79,7 @@ ListBoxControl* ListBoxControl::create (const graphics_object& go)
 //////////////////////////////////////////////////////////////////////////////
 
 ListBoxControl::ListBoxControl (const graphics_object& go, QListWidget* list)
-     : BaseControl (go, list)
+     : BaseControl (go, list), m_blockCallback (false)
 {
   uicontrol::properties& up = properties<uicontrol> ();
 
@@ -103,8 +132,11 @@ void ListBoxControl::update (int pId)
   switch (pId)
     {
     case uicontrol::properties::ID_STRING:
+      m_blockCallback = true;
       list->clear ();
       list->addItems (Utils::fromStringVector (up.get_string_vector ()));
+      updateSelection (list, up.get_value ().matrix_value ());
+      m_blockCallback = false;
       break;
     case uicontrol::properties::ID_MIN:
     case uicontrol::properties::ID_MAX:
@@ -114,29 +146,9 @@ void ListBoxControl::update (int pId)
 	list->setSelectionMode (QAbstractItemView::SingleSelection);
       break;
     case uicontrol::properties::ID_VALUE:
-      list->blockSignals (true);
-      list->clearSelection ();
-	{
-	  Matrix value = up.get_value ().matrix_value ();
-
-	  octave_idx_type n = value.numel ();
-	  int lc = list->count ();
-
-	  for (octave_idx_type i = 0; i < n; i++)
-	    {
-	      int idx = xround (value(i));
-
-	      if (1 <= idx && idx <= lc)
-		{
-		  list->item (idx-1)->setSelected (true);
-		  if (i == 0
-		      && list->selectionMode () == 
-		      		QAbstractItemView::SingleSelection)
-		    break;
-		}
-	    }
-	}
-      list->blockSignals (false);
+      m_blockCallback = true;
+      updateSelection (list, up.get_value ().matrix_value ());
+      m_blockCallback = false;
       break;
     default:
       BaseControl::update (pId);
@@ -148,17 +160,20 @@ void ListBoxControl::update (int pId)
 
 void ListBoxControl::itemSelectionChanged (void)
 {
-  QListWidget* list = qWidget<QListWidget> ();
+  if (! m_blockCallback)
+    {
+      QListWidget* list = qWidget<QListWidget> ();
 
-  QModelIndexList l = list->selectionModel ()->selectedIndexes ();
-  Matrix value (dim_vector (1, l.size ()));
-  int i = 0;
+      QModelIndexList l = list->selectionModel ()->selectedIndexes ();
+      Matrix value (dim_vector (1, l.size ()));
+      int i = 0;
 
-  foreach (const QModelIndex& idx, l)
-    value(i++) = (idx.row () + 1);
+      foreach (const QModelIndex& idx, l)
+       value(i++) = (idx.row () + 1);
 
-  gh_manager::post_set (m_handle, "value", octave_value (value), false);
-  gh_manager::post_callback (m_handle, "callback");
+      gh_manager::post_set (m_handle, "value", octave_value (value), false);
+      gh_manager::post_callback (m_handle, "callback");
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////

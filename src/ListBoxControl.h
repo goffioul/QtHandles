@@ -48,6 +48,9 @@ protected:
 
 private slots:
   void itemSelectionChanged (void);
+
+private:
+  bool m_blockCallback;
 };
 
 //////////////////////////////////////////////////////////////////////////////
