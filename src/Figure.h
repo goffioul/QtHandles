@@ -22,6 +22,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __QtHandles_Figure__
 #define __QtHandles_Figure__ 1
 
+#include <QRect>
+
 #include "MenuContainer.h"
 #include "Object.h"
 
@@ -100,6 +102,8 @@ private:
   MouseMode m_mouseMode, m_lastMouseMode;
   QToolBar* m_figureToolBar;
   QMenuBar* m_menuBar;
+  QRect m_innerRect;
+  QRect m_outerRect;
 };
 
 //////////////////////////////////////////////////////////////////////////////

@@ -85,6 +85,23 @@ static bool hasUiMenuChildren (const figure::properties& fp)
 
 //////////////////////////////////////////////////////////////////////////////
 
+static QRect boundingBoxToRect (const Matrix& bb)
+{
+  QRect r;
+
+  if (bb.numel () == 4)
+    {
+      r = QRect (xround (bb(0)), xround (bb(1)),
+                 xround (bb(2)), xround (bb(3)));
+      if (! r.isValid ())
+        r = QRect ();
+    }
+
+  return r;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
 Figure* Figure::create (const graphics_object& go)
 {
   return new Figure (go, new FigureWindow ());
@@ -94,7 +111,8 @@ Figure* Figure::create (const graphics_object& go)
 
 Figure::Figure (const graphics_object& go, QMainWindow* win)
      : Object (go, win), m_blockUpdates (false), m_mouseMode (NoMode),
-       m_lastMouseMode (NoMode), m_figureToolBar (0)
+       m_lastMouseMode (NoMode), m_figureToolBar (0), m_menuBar (0),
+       m_innerRect (), m_outerRect ()
 {
   m_container = new Container (win);
   win->setCentralWidget (m_container);
@@ -114,9 +132,10 @@ Figure::Figure (const graphics_object& go, QMainWindow* win)
   else
     m_menuBar->hide ();
 
-  Matrix bb = fp.get_boundingbox (true);
-  win->setGeometry (xround (bb(0)), xround (bb(1)) - offset,
-		    xround (bb(2)), xround (bb(3)) + offset);
+  m_innerRect = boundingBoxToRect (fp.get_boundingbox (true));
+  m_outerRect = boundingBoxToRect (fp.get_boundingbox (false));
+
+  win->setGeometry (m_innerRect.adjusted (0, -offset, 0, 0));
   win->setWindowTitle (Utils::fromStdString (fp.get_title ()));
 
   int eventMask = 0;
@@ -245,15 +264,14 @@ void Figure::update (int pId)
     {
     case figure::properties::ID_POSITION:
 	{
-	  Matrix bb = fp.get_boundingbox (true);
+          m_innerRect = boundingBoxToRect (fp.get_boundingbox (true));
 	  int offset = 0;
 
-	  if (m_figureToolBar->isVisible ())
+	  if (! m_figureToolBar->isHidden ())
 	    offset = m_figureToolBar->sizeHint ().height ();
-	  if (m_menuBar->isVisible ())
+	  if (! m_menuBar->isHidden ())
 	    offset += m_menuBar->sizeHint ().height () + 1;
-	  win->setGeometry (xround (bb(0)), xround (bb(1)) - offset,
-			    xround (bb(2)), xround (bb(3)) + offset);
+	  win->setGeometry (m_innerRect.adjusted (0, -offset, 0, 0));
 	}
       break;
     case figure::properties::ID_NAME:
@@ -300,7 +318,7 @@ void Figure::update (int pId)
 
 void Figure::showFigureToolBar (bool visible)
 {
-  if (m_figureToolBar->isVisible () != visible)
+  if ((! m_figureToolBar->isHidden ()) != visible)
     {
       int dy = m_figureToolBar->sizeHint ().height ();
       QRect r = qWidget<QWidget> ()->geometry ();
@@ -342,7 +360,7 @@ void Figure::showMenuBar (bool visible)
   if (! visible)
     visible = hasUiMenuChildren (properties<figure> ());
 
-  if (m_menuBar->isVisible () != visible)
+  if ((! m_menuBar->isHidden ()) != visible)
     {
       int dy = qMax (h1, h2) + 1;
       QRect r = qWidget<QWidget> ()->geometry ();
@@ -416,17 +434,32 @@ void Figure::updateBoundingBox (bool internal)
     {
       QPoint pt = win->mapToGlobal (m_container->pos ());
 
-      bb(0) = pt.x ();
-      bb(1) = pt.y ();
-      bb(2) = m_container->width ();
-      bb(3) = m_container->height ();
+      if (pt != m_innerRect.topLeft ()
+          || m_container->size () != m_innerRect.size ())
+        {
+          bb(0) = pt.x ();
+          bb(1) = pt.y ();
+          bb(2) = m_container->width ();
+          bb(3) = m_container->height ();
+
+          m_innerRect = boundingBoxToRect (bb);
+        }
+      else
+        return;
     }
   else
     {
-      bb(0) = win->x ();
-      bb(1) = win->y ();
-      bb(2) = win->frameGeometry ().width ();
-      bb(3) = win->frameGeometry ().height ();
+      if (win->frameGeometry () != m_outerRect)
+        {
+          bb(0) = win->x ();
+          bb(1) = win->y ();
+          bb(2) = win->frameGeometry ().width ();
+          bb(3) = win->frameGeometry ().height ();
+
+          m_outerRect = boundingBoxToRect (bb);
+        }
+      else
+        return;
     }
 
   UpdateBoundingBoxData* d = new UpdateBoundingBoxData ();
@@ -585,7 +618,7 @@ void Figure::showCustomToolBar (QToolBar* bar, bool visible)
 {
   QMainWindow* win = qWidget<QMainWindow> ();
 
-  if (bar->isVisible () != visible)
+  if ((! bar->isHidden ()) != visible)
     {
       QSize sz = bar->sizeHint ();
       QRect r = win->geometry ();
