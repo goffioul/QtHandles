@@ -55,7 +55,7 @@ bool __init__ (void)
 	  gh_manager::enable_event_processing (true);
 
 	  graphics_toolkit tk (new Backend ());
-	  graphics_toolkit::register_toolkit (tk);
+          gtk_manager::load_toolkit (tk);
 
 	  octave_add_atexit_function ("__shutdown_qt__");
 
@@ -101,7 +101,7 @@ bool __shutdown__ (void)
     {
       octave_add_atexit_function ("__shutdown_qt__");
 
-      graphics_toolkit::unregister_toolkit ("qt");
+      gtk_manager::unload_toolkit ("qt");
 
       gh_manager::enable_event_processing (false);
 
