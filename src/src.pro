@@ -53,6 +53,7 @@ HEADERS = \
 	 EditControl.h \
 	 Figure.h \
 	 FigureWindow.h \
+	 GenericEventNotify.h \
 	 GLCanvas.h \
 	 KeyMap.h \
 	 ListBoxControl.h \

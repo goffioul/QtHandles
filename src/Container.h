@@ -24,6 +24,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QWidget>
 
+#include "GenericEventNotify.h"
+
 class graphics_handle;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -33,9 +35,11 @@ namespace QtHandles
 
 //////////////////////////////////////////////////////////////////////////////
 
+DECLARE_GENERICEVENTNOTIFY_SENDER(ContainerBase, QWidget);
+
 class Canvas;
 
-class Container : public QWidget
+class Container : public ContainerBase
 {
 public:
   Container (QWidget* parent);

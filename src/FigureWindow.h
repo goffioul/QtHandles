@@ -24,6 +24,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QMainWindow>
 
+#include "GenericEventNotify.h"
+
 //////////////////////////////////////////////////////////////////////////////
 
 namespace QtHandles
@@ -31,8 +33,12 @@ namespace QtHandles
 
 //////////////////////////////////////////////////////////////////////////////
 
-class FigureWindow : public QMainWindow
+DECLARE_GENERICEVENTNOTIFY_SENDER(FigureWindowBase, QMainWindow);
+
+class FigureWindow : public FigureWindowBase
 {
+  Q_OBJECT
+
 public:
   FigureWindow (QWidget* parent = 0);
   ~FigureWindow (void);

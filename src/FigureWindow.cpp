@@ -31,7 +31,7 @@ namespace QtHandles
 //////////////////////////////////////////////////////////////////////////////
 
 FigureWindow::FigureWindow (QWidget* parent)
-  : QMainWindow (parent)
+  : FigureWindowBase (parent)
 {
 }
 

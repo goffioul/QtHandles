@@ -24,11 +24,11 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QRect>
 
+#include "GenericEventNotify.h"
 #include "MenuContainer.h"
 #include "Object.h"
 
 class QMainWindow;
-class QMenuBar;
 class QToolBar;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -50,16 +50,21 @@ enum MouseMode
 //////////////////////////////////////////////////////////////////////////////
 
 class Container;
+class FigureWindow;
+class MenuBar;
 class ToolBar;
 
-class Figure : public Object, public MenuContainer
+class Figure :
+  public Object,
+  public MenuContainer,
+  public GenericEventNotifyReceiver
 {
   Q_OBJECT
 
   friend class ToolBar;
 
 public:
-  Figure (const graphics_object& go, QMainWindow* win);
+  Figure (const graphics_object& go, FigureWindow* win);
   ~Figure (void);
 
   static Figure* create (const graphics_object& go);
@@ -69,12 +74,21 @@ public:
   Container* innerContainer (void);
   QWidget* menu (void);
 
-  bool eventFilter (QObject* watched, QEvent* event);
+  bool eventNotifyBefore (QObject* watched, QEvent* event);
+  void eventNotifyAfter (QObject* watched, QEvent* event);
+
+protected:
+  enum UpdateBoundingBoxFlag
+    {
+      UpdateBoundingBoxPosition = 0x1,
+      UpdateBoundingBoxSize     = 0x2,
+      UpdateBoundingBoxAll      = 0x3
+    };
 
 protected:
   void redraw (void);
   void update (int pId);
-  void updateBoundingBox (bool internal = false);
+  void updateBoundingBox (bool internal = false, int flags = 0);
   void beingDeleted (void);
 
 private:
@@ -95,13 +109,17 @@ private slots:
   void editPaste (void);
   void helpAboutQtHandles (void);
   void updateMenuBar (void);
+  void updateContainer (void);
+
+signals:
+  void asyncUpdate (void);
 
 private:
   Container* m_container;
   bool m_blockUpdates;
   MouseMode m_mouseMode, m_lastMouseMode;
   QToolBar* m_figureToolBar;
-  QMenuBar* m_menuBar;
+  MenuBar* m_menuBar;
   QRect m_innerRect;
   QRect m_outerRect;
 };

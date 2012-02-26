@@ -37,7 +37,7 @@ namespace QtHandles
 //////////////////////////////////////////////////////////////////////////////
 
 Container::Container (QWidget* parent)
-  : QWidget (parent), m_canvas (0)
+  : ContainerBase (parent), m_canvas (0)
 {
   setFocusPolicy (Qt::ClickFocus);
 }
@@ -95,7 +95,7 @@ void Container::resizeEvent (QResizeEvent* /* event */)
 
 	      obj->qWidget<QWidget> ()
 		->setGeometry (xround (bb(0)), xround (bb(1)),
-			       xround (bb(2)), xround(bb(3)));
+			       xround (bb(2)), xround (bb(3)));
 	    }
 	}
     }
