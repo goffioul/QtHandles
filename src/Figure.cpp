@@ -140,9 +140,9 @@ Figure::Figure (const graphics_object& go, FigureWindow* win)
   m_innerRect = boundingBoxToRect (fp.get_boundingbox (true));
   m_outerRect = boundingBoxToRect (fp.get_boundingbox (false));
 
-  qDebug () << "Figure::Figure:" << m_innerRect;
+  //qDebug () << "Figure::Figure:" << m_innerRect;
   win->setGeometry (m_innerRect.adjusted (0, -offset, 0, 0));
-  qDebug () << "Figure::Figure(adjusted)" << m_innerRect.adjusted (0, -offset, 0, 0);
+  //qDebug () << "Figure::Figure(adjusted)" << m_innerRect.adjusted (0, -offset, 0, 0);
   win->setWindowTitle (Utils::fromStdString (fp.get_title ()));
 
   int eventMask = 0;
@@ -279,7 +279,7 @@ void Figure::update (int pId)
     case figure::properties::ID_POSITION:
 	{
           m_innerRect = boundingBoxToRect (fp.get_boundingbox (true));
-          qDebug () << "Figure::update(position):" << m_innerRect;
+          //qDebug () << "Figure::update(position):" << m_innerRect;
 	  int offset = 0;
 
           foreach (QToolBar* tb, win->findChildren<QToolBar*> ())
@@ -287,9 +287,9 @@ void Figure::update (int pId)
               offset += tb->sizeHint ().height ();
 	  if (! m_menuBar->isHidden ())
 	    offset += m_menuBar->sizeHint ().height () + 1;
-          qDebug () << "Figure::update(position)(adjusted):" << m_innerRect.adjusted (0, -offset, 0, 0);
+          //qDebug () << "Figure::update(position)(adjusted):" << m_innerRect.adjusted (0, -offset, 0, 0);
 	  win->setGeometry (m_innerRect.adjusted (0, -offset, 0, 0));
-          qDebug () << "Figure::update(position): done";
+          //qDebug () << "Figure::update(position): done";
 	}
       break;
     case figure::properties::ID_NAME:
@@ -383,12 +383,12 @@ void Figure::showMenuBar (bool visible)
       int dy = qMax (h1, h2) + 1;
       QRect r = qWidget<QWidget> ()->geometry ();
 
-      qDebug () << "Figure::showMenuBar:" << r;
+      //qDebug () << "Figure::showMenuBar:" << r;
       if (! visible)
 	r.adjust (0, dy, 0, 0);
       else
 	r.adjust (0, -dy, 0, 0);
-      qDebug () << "Figure::showMenuBar(adjusted):" << r;
+      //qDebug () << "Figure::showMenuBar(adjusted):" << r;
 
       m_blockUpdates = true;
       qWidget<QWidget> ()->setGeometry (r);
@@ -438,8 +438,8 @@ void Figure::updateBoundingBoxHelper (void* data)
     {
       figure::properties& fp = Utils::properties<figure> (go);
 
-      qDebug ("Figure::updateBoundingBoxHelper: internal=%d, bbox=[%g %g %g %g]",
-              d->m_internal, d->m_bbox(0), d->m_bbox(1), d->m_bbox(2), d->m_bbox(3));
+      //qDebug ("Figure::updateBoundingBoxHelper: internal=%d, bbox=[%g %g %g %g]",
+      //        d->m_internal, d->m_bbox(0), d->m_bbox(1), d->m_bbox(2), d->m_bbox(3));
       fp.set_boundingbox (d->m_bbox, d->m_internal, false);
 
       if (d->m_internal)
@@ -467,7 +467,7 @@ void Figure::updateBoundingBox (bool internal, int flags)
 
       if (r.isValid () && r != m_innerRect)
         {
-          qDebug() << "inner rect changed:" << m_innerRect << "->>" << r;
+          //qDebug() << "inner rect changed:" << m_innerRect << "->>" << r;
           m_innerRect = r;
 
           bb(0) = r.x ();
@@ -489,7 +489,7 @@ void Figure::updateBoundingBox (bool internal, int flags)
 
       if (r.isValid () && r != m_outerRect )
         {
-          qDebug() << "outer rect changed:" << m_outerRect << "->>" << r;
+          //qDebug() << "outer rect changed:" << m_outerRect << "->>" << r;
           m_outerRect = r;
 
           bb(0) = r.x ();
@@ -508,8 +508,8 @@ void Figure::updateBoundingBox (bool internal, int flags)
   d->m_handle = m_handle;
   d->m_figure = this;
 
-  qDebug ("Figure::updateBoundingBox: internal=%d, bbox=[%g %g %g %g]",
-          d->m_internal, d->m_bbox(0), d->m_bbox(1), d->m_bbox(2), d->m_bbox(3));
+  //qDebug ("Figure::updateBoundingBox: internal=%d, bbox=[%g %g %g %g]",
+  //        d->m_internal, d->m_bbox(0), d->m_bbox(1), d->m_bbox(2), d->m_bbox(3));
   gh_manager::post_function (Figure::updateBoundingBoxHelper, d);
 }
 
@@ -669,7 +669,7 @@ void Figure::addCustomToolBar (QToolBar* bar, bool visible)
     {
       QSize sz = bar->sizeHint ();
       QRect r = win->geometry ();
-      qDebug () << "Figure::addCustomToolBar:" << r;
+      //qDebug () << "Figure::addCustomToolBar:" << r;
 
       r.adjust (0, -sz.height (), 0, 0);
 
@@ -679,7 +679,7 @@ void Figure::addCustomToolBar (QToolBar* bar, bool visible)
       win->addToolBar (bar);
       m_blockUpdates = false;
 
-      qDebug () << "Figure::addCustomToolBar:" << win->geometry ();
+      //qDebug () << "Figure::addCustomToolBar:" << win->geometry ();
       updateBoundingBox (false);
     }
 }
