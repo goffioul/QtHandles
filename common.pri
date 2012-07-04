@@ -13,4 +13,5 @@ win32 {
 	QMAKE_CLEAN += $(DESTDIR)$(QMAKE_TARGET).lib $(DESTDIR)$(QMAKE_TARGET).pdb
 }
 QMAKE_LIBDIR += $$system(octave-config -p OCTLIBDIR)
+QMAKE_RPATHDIR += $$system(octave-config -p OCTLIBDIR)
 LIBS += $$system(mkoctfile -p OCTAVE_LIBS)
