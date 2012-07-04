@@ -39,7 +39,8 @@ SOURCES = \
 	 ToggleButtonControl.cpp \
 	 ToggleTool.cpp \
 	 ToolBar.cpp \
-	 Utils.cpp
+	 Utils.cpp \
+	 gl-select.cc
 
 HEADERS = \
 	 __init_qt__.h \
@@ -75,7 +76,8 @@ HEADERS = \
 	 ToggleButtonControl.h \
 	 ToggleTool.h \
 	 ToolBar.h \
-	 Utils.h
+	 Utils.h \
+	 gl-select.h
 
 RESOURCES = qthandles.qrc
 

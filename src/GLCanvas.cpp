@@ -24,6 +24,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <octave/graphics.h>
 
 #include "GLCanvas.h"
+#include "gl-select.h"
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -57,6 +58,24 @@ void GLCanvas::draw (const graphics_handle& handle)
       r.set_viewport (width (), height ());
       r.draw(go);
     }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+graphics_object GLCanvas::selectFromAxes (const graphics_object& ax,
+                                          const QPoint& pt)
+{
+  makeCurrent ();
+
+  if (ax)
+    {
+      opengl_selector s;
+
+      s.set_viewport (width (), height ());
+      return s.select (ax, pt.x (), height () - pt.y ());
+    }
+
+  return graphics_object ();
 }
 
 //////////////////////////////////////////////////////////////////////////////

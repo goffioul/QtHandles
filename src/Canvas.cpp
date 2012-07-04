@@ -20,6 +20,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <QApplication>
+#include <QList>
 #include <QMouseEvent>
 #include <QRectF>
 
@@ -150,22 +151,18 @@ void Canvas::canvasMousePressEvent (QMouseEvent* event)
   if (obj.valid_object ())
     {
       graphics_object figObj (obj.get_ancestor ("figure"));
-      graphics_object axesObj, uiObj;
+      graphics_object uiObj;
+      QList<graphics_object> axesList;
 
       Matrix children = obj.get_properties ().get_children ();
+      octave_idx_type num_children = children.numel ();
 
-      for (int i = children.numel () - 1; i >= 0; i--)
+      for (int i = 0; i < num_children; i++)
 	{
 	  graphics_object childObj (gh_manager::get_object (children(i)));
 
-	  if (! axesObj && childObj.isa ("axes"))
-	    {
-	      Matrix bb = childObj.get_properties ().get_boundingbox (true);
-	      QRectF r (bb(0), bb(1), bb(2), bb(3));
-
-	      if (r.contains (event->posF ()))
-		axesObj = childObj;
-	    }
+          if (childObj.isa ("axes"))
+            axesList.append (childObj);
 	  else if (childObj.isa ("uicontrol") || childObj.isa ("uipanel"))
 	    {
 	      Matrix bb = childObj.get_properties ().get_boundingbox (false);
@@ -182,6 +179,8 @@ void Canvas::canvasMousePressEvent (QMouseEvent* event)
 
       if (uiObj)
 	{
+          Utils::properties<figure> (figObj)
+            .set_currentobject (uiObj.get_handle ().as_octave_value ());
 	  gh_manager::post_set (figObj.get_handle (), "selectiontype",
 				Utils::figureSelectionType (event), false);
 	  gh_manager::post_set (figObj.get_handle (), "currentpoint",
@@ -195,10 +194,46 @@ void Canvas::canvasMousePressEvent (QMouseEvent* event)
 
 	  return;
 	}
-  
+
+      graphics_object axesObj, theObj;
+
+      for (QList<graphics_object>::ConstIterator it = axesList.begin ();
+           it != axesList.end (); ++it)
+        {
+          graphics_object go = selectFromAxes (*it, event->pos ());
+
+          if (go)
+            {
+              theObj = go;
+              axesObj = *it;
+            }
+          else
+            {
+	      Matrix bb = it->get_properties ().get_boundingbox (true);
+	      QRectF r (bb(0), bb(1), bb(2), bb(3));
+
+	      if (r.contains (event->posF ()))
+		axesObj = *it;
+            }
+
+          if (axesObj)
+            break;
+        }
+
       if (axesObj)
-	Utils::properties<figure> (figObj)
-	 .set_currentaxes (axesObj.get_handle ().as_octave_value ());
+        {
+          Utils::properties<figure> (figObj)
+            .set_currentaxes (axesObj.get_handle ().as_octave_value ());
+          if (! theObj)
+            theObj = axesObj;
+        }
+
+      if (theObj)
+        Utils::properties<figure> (figObj)
+          .set_currentobject (theObj.get_handle ().as_octave_value ());
+      else
+        Utils::properties<figure> (figObj)
+          .set_currentobject (obj.get_handle ().as_octave_value ());
 
       Figure* fig = dynamic_cast<Figure*> (Backend::toolkitObject (figObj));
 
@@ -217,15 +252,15 @@ void Canvas::canvasMousePressEvent (QMouseEvent* event)
 				false);
 	  gh_manager::post_callback (figObj.get_handle (),
 				     "windowbuttondownfcn");
-	  if (axesObj)
-	    gh_manager::post_callback (axesObj.get_handle (),
+	  if (theObj)
+	    gh_manager::post_callback (theObj.get_handle (),
 				       "buttondownfcn");
 	  else
 	    gh_manager::post_callback (obj.get_handle (),
 				       "buttondownfcn");
 	  if (event->button () == Qt::RightButton)
-	    ContextMenu::executeAt ((axesObj
-				     ? axesObj.get_properties ()
+	    ContextMenu::executeAt ((theObj
+				     ? theObj.get_properties ()
 				     : obj.get_properties ()),
 				    event->globalPos ());
 	  break;

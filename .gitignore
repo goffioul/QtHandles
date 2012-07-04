@@ -16,3 +16,5 @@ vc*.pdb
 # Qt MOC/RCC files
 moc_*.cpp
 qrc_*.cpp
+# Octave core files
+octave-core
