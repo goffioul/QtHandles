@@ -41,6 +41,8 @@ PushTool* PushTool::create (const graphics_object& go)
       if (parentWidget)
 	return new PushTool (go, new QAction (parentWidget));
     }
+
+  return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////
