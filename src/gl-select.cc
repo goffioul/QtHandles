@@ -138,18 +138,12 @@ opengl_selector::draw (const graphics_object& go, bool toplevel)
 }
 
 void
-opengl_selector::draw_text (const text::properties& props)
+opengl_selector::fake_text (double x, double y, double z, const Matrix& bbox,
+                            bool use_scale)
 {
-  if (props.get_string ().is_empty ())
-    return;
-
-  Matrix pos = props.get_data_position ();
-  const Matrix bbox = props.get_extent_matrix ();
-
   ColumnVector xpos, xp1, xp2;
 
-  xpos = get_transform ().transform (pos(0), pos(1),
-                                     pos.numel () > 2 ? pos(2) : 0.0);
+  xpos = get_transform ().transform (x, y, z, use_scale);
 
   xp1 = xp2 = xpos;
   xp1(0) += bbox(0);
@@ -170,4 +164,36 @@ opengl_selector::draw_text (const text::properties& props)
   glVertex3dv (p3.data ());
   glVertex3dv (p4.data ());
   glEnd ();
+}
+
+void
+opengl_selector::draw_text (const text::properties& props)
+{
+  if (props.get_string ().is_empty ())
+    return;
+
+  Matrix pos = props.get_data_position ();
+  const Matrix bbox = props.get_extent_matrix ();
+
+  fake_text (pos(0), pos(1), pos.numel () > 2 ? pos(2) : 0.0, bbox);
+}
+
+Matrix
+opengl_selector::render_text (const std::string& txt,
+                              double x, double y, double z,
+                              int halign, int valign, double rotation)
+{
+#if HAVE_FREETYPE
+  uint8NDArray pixels;
+  Matrix bbox;
+
+  // FIXME: probably more efficient to only compute bbox instead
+  //        of doing full text rendering...
+  text_to_pixels (txt, pixels, bbox, halign, valign, rotation);
+  fake_text (x, y, z, bbox, false);
+
+  return bbox;
+#else
+  return Matrix (1, 4, 0.0);
+#endif
 }

@@ -51,8 +51,15 @@ protected:
 
   virtual void init_marker (const std::string& m, double size, float width);
 
+  virtual Matrix render_text (const std::string& txt,
+                              double x, double y, double z,
+                              int halign, int valign, double rotation = 0.0);
+
 private:
   void apply_pick_matrix (void);
+
+  void fake_text (double x, double y, double z, const Matrix& bbox,
+                  bool use_scale = true);
 
 private:
   // The mouse coordinate of the selection/picking point
