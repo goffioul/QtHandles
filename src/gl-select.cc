@@ -56,7 +56,7 @@ opengl_selector::init_marker (const std::string& m, double size, float width)
 # define BUFFER_SIZE 128
 
 graphics_object
-opengl_selector::select (const graphics_object& ax, int x, int y)
+opengl_selector::select (const graphics_object& ax, int x, int y, int flags)
 {
   glEnable (GL_DEPTH_TEST);
   glDepthFunc (GL_LEQUAL);
@@ -88,14 +88,27 @@ opengl_selector::select (const graphics_object& ax, int x, int y)
                  minZ = select_buffer[j++];
 
           j++; // skip maxZ
-          if (minZ < current_minZ)
+          if (((flags & select_last) == 0 && (minZ <= current_minZ)) ||
+              ((flags & select_last) != 0 && (minZ >= current_minZ)))
             {
-              current_minZ = minZ;
-              // TODO: scan name stack up to first object with invisible
-              //       handle? for the time being, pick up the top-most name
-              //       in the stack
-              current_name =
+              bool candidate = true;
+              GLuint name =
                 select_buffer[std::min (j + n, GLuint (BUFFER_SIZE)) - 1];
+
+              if ((flags & select_ignore_hittest) == 0)
+                {
+                  graphics_object go = object_map[name];
+
+                  if (! go.get_properties ().is_hittest ())
+                    candidate = false;
+                }
+
+              if (candidate)
+                {
+                  current_minZ = minZ;
+                  current_name = name;
+                }
+
               j += n;
             }
           else

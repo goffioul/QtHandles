@@ -59,6 +59,9 @@ function test1
   lt = text (0.2, -0.5, "Current object:");
   addlistener (gcf, "currentobject", {@gco_changed, lt});
 
+  text (3, 0.8, "I'm not clickable", "HitTest", "off");
+  text (3, 0.5, "I'm invisible", "HandleVisibility", "off");
+
 endfunction
 
 function set_line_style (h, e, st)

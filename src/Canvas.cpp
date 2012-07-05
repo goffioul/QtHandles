@@ -151,7 +151,7 @@ void Canvas::canvasMousePressEvent (QMouseEvent* event)
   if (obj.valid_object ())
     {
       graphics_object figObj (obj.get_ancestor ("figure"));
-      graphics_object uiObj;
+      graphics_object currentObj, axesObj;
       QList<graphics_object> axesList;
 
       Matrix children = obj.get_properties ().get_children ();
@@ -171,69 +171,57 @@ void Canvas::canvasMousePressEvent (QMouseEvent* event)
 	      r.adjust (-5, -5, 5, 5);
 	      if (r.contains (event->posF ()))
 		{
-		  uiObj = childObj;
+		  currentObj = childObj;
 		  break;
 		}
 	    }
 	}
 
-      if (uiObj)
-	{
-          Utils::properties<figure> (figObj)
-            .set_currentobject (uiObj.get_handle ().as_octave_value ());
-	  gh_manager::post_set (figObj.get_handle (), "selectiontype",
-				Utils::figureSelectionType (event), false);
-	  gh_manager::post_set (figObj.get_handle (), "currentpoint",
-				Utils::figureCurrentPoint (figObj, event),
-				false);
-	  gh_manager::post_callback (uiObj.get_handle (), "buttondownfcn");
-
-	  if (event->button () == Qt::RightButton)
-	    ContextMenu::executeAt (uiObj.get_properties (),
-				    event->globalPos  ());
-
-	  return;
-	}
-
-      graphics_object axesObj, theObj;
-
-      for (QList<graphics_object>::ConstIterator it = axesList.begin ();
-           it != axesList.end (); ++it)
+      if (! currentObj)
         {
-          graphics_object go = selectFromAxes (*it, event->pos ());
-
-          if (go)
+          for (QList<graphics_object>::ConstIterator it = axesList.begin ();
+               it != axesList.end (); ++it)
             {
-              theObj = go;
-              axesObj = *it;
-            }
-          else
-            {
-	      Matrix bb = it->get_properties ().get_boundingbox (true);
-	      QRectF r (bb(0), bb(1), bb(2), bb(3));
+              graphics_object go = selectFromAxes (*it, event->pos ());
 
-	      if (r.contains (event->posF ()))
-		axesObj = *it;
+              if (go)
+                {
+                  currentObj = go;
+                  axesObj = *it;
+                }
+              // FIXME: is this really necessary? the axes object should
+              //        have been selected through selectFromAxes anyway
+              else if (it->get_properties ().is_hittest ())
+                {
+                  Matrix bb = it->get_properties ().get_boundingbox (true);
+                  QRectF r (bb(0), bb(1), bb(2), bb(3));
+
+                  if (r.contains (event->posF ()))
+                    axesObj = *it;
+                }
+
+              if (axesObj)
+                break;
             }
 
           if (axesObj)
-            break;
+            {
+              if (axesObj.get_properties ().handlevisibility_is ("on"))
+                Utils::properties<figure> (figObj)
+                  .set_currentaxes (axesObj.get_handle ().as_octave_value ());
+              if (! currentObj)
+                currentObj = axesObj;
+            }
         }
 
-      if (axesObj)
-        {
-          Utils::properties<figure> (figObj)
-            .set_currentaxes (axesObj.get_handle ().as_octave_value ());
-          if (! theObj)
-            theObj = axesObj;
-        }
+      if (! currentObj)
+        currentObj = obj;
 
-      if (theObj)
+      if (currentObj.get_properties ().handlevisibility_is ("on"))
         Utils::properties<figure> (figObj)
-          .set_currentobject (theObj.get_handle ().as_octave_value ());
+          .set_currentobject (currentObj.get_handle ().as_octave_value ());
       else
-        Utils::properties<figure> (figObj)
-          .set_currentobject (obj.get_handle ().as_octave_value ());
+        Utils::properties<figure> (figObj).set_currentobject (octave_NaN);
 
       Figure* fig = dynamic_cast<Figure*> (Backend::toolkitObject (figObj));
 
@@ -252,16 +240,10 @@ void Canvas::canvasMousePressEvent (QMouseEvent* event)
 				false);
 	  gh_manager::post_callback (figObj.get_handle (),
 				     "windowbuttondownfcn");
-	  if (theObj)
-	    gh_manager::post_callback (theObj.get_handle (),
-				       "buttondownfcn");
-	  else
-	    gh_manager::post_callback (obj.get_handle (),
-				       "buttondownfcn");
+          gh_manager::post_callback (currentObj.get_handle (),
+                                     "buttondownfcn");
 	  if (event->button () == Qt::RightButton)
-	    ContextMenu::executeAt ((theObj
-				     ? theObj.get_properties ()
-				     : obj.get_properties ()),
+	    ContextMenu::executeAt (currentObj.get_properties (),
 				    event->globalPos ());
 	  break;
 	case RotateMode:

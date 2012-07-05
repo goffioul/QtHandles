@@ -26,6 +26,12 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <map>
 
+enum select_flags
+{
+  select_ignore_hittest  = 0x01,
+  select_last            = 0x02
+};
+
 class opengl_selector : public opengl_renderer
 {
 public:
@@ -33,7 +39,8 @@ public:
 
   virtual ~opengl_selector (void) { }
 
-  graphics_object select (const graphics_object& ax, int x, int y);
+  graphics_object select (const graphics_object& ax, int x, int y,
+                          int flags = 0);
 
   virtual void draw (const graphics_object& go, bool toplevel = true);
 
