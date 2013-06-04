@@ -10,3 +10,56 @@ QtHandles is licensed under GPL v3 or higher.
 
 The icons used in QtHandles are from the Crystal icon set and are licensed
 under LGPL. See http://www.everaldo.com/crystal/ for more information.
+
+Requirements
+------------
+
+- octave >= 3.7 (current development branch).
+- Qt >= 4.7
+
+Compilation
+-----------
+
+Use the following commands:
+
+	qmake
+	make
+
+These commands assume that octave is available somewhere in your PATH. If
+this is not the case, the recommended way to compile QtHandles is the
+following:
+
+	PATH=/where/octave/is/installed/bin:$PATH qmake -recursive
+	make
+
+Running from sources
+--------------------
+
+QtHandles can be run from sources, using the simple wrapper provided:
+
+	./tools/octave-qt
+
+This wrapper runs octave in CLI mode, but provides the necessary framework
+to run a Qt application. This wrapper is not required if you're running
+octave using the GUI (only available in octave >= 3.7).
+
+Installing
+----------
+
+Use the following command:
+
+	./install.sh
+
+This command assumes that octave is available in your PATH. If this is not
+the case, use the following command:
+
+	PATH=/where/octave/is/installed/bin:$PATH ./install.sh
+
+Activating QtHandles
+--------------------
+
+QtHandles is activated in octave like any other toolkit. Type the following
+at octave prompt:
+
+	graphics_toolkit qt
+
