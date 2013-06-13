@@ -321,6 +321,22 @@ void Canvas::canvasMouseReleaseEvent (QMouseEvent* event)
 	  redraw (false);
 	}
     }
+  else if (m_mouseMode == NoMode)
+    {
+      gh_manager::auto_lock lock;
+      graphics_object obj = gh_manager::get_object (m_handle);
+
+      if (obj.valid_object ())
+        {
+          graphics_object figObj (obj.get_ancestor ("figure"));
+
+	  gh_manager::post_set (figObj.get_handle (), "currentpoint",
+				Utils::figureCurrentPoint (figObj, event),
+				false);
+          gh_manager::post_callback (figObj.get_handle (),
+                                     "windowbuttonupfcn");
+        }
+    }
 
   m_mouseAxes = graphics_handle ();
   m_mouseMode = NoMode;
