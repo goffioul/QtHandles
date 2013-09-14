@@ -169,7 +169,7 @@ void Canvas::canvasMousePressEvent (QMouseEvent* event)
 	      QRectF r (bb(0), bb(1), bb(2), bb(3));
 
 	      r.adjust (-5, -5, 5, 5);
-	      if (r.contains (event->posF ()))
+	      if (r.contains (event->pos ()))
 		{
 		  currentObj = childObj;
 		  break;
@@ -196,7 +196,7 @@ void Canvas::canvasMousePressEvent (QMouseEvent* event)
                   Matrix bb = it->get_properties ().get_boundingbox (true);
                   QRectF r (bb(0), bb(1), bb(2), bb(3));
 
-                  if (r.contains (event->posF ()))
+                  if (r.contains (event->pos ()))
                     axesObj = *it;
                 }
 

@@ -1,6 +1,8 @@
 TEMPLATE = app
 TARGET = octave-qt
 
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
 CONFIG += console
 
 include(../common.pri)
