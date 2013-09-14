@@ -57,9 +57,8 @@ void Object::init (QObject* obj, bool)
 
   if (m_qobject)
     {
-      QVariant v;
-      v.setValue(reinterpret_cast<void *>(this));
-      m_qobject->setProperty ("QtHandles::Object", v);
+      m_qobject->setProperty ("QtHandles::Object",
+                              QVariant::fromValue<void*> (this));
       connect (m_qobject, SIGNAL (destroyed (QObject*)),
 	       SLOT (objectDestroyed (QObject*)));
     }

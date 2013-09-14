@@ -22,7 +22,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <QApplication>
 #include <QList>
 #include <QMouseEvent>
-#include <QRectF>
+#include <QRect>
 
 #include "Backend.h"
 #include "Canvas.h"
@@ -166,7 +166,7 @@ void Canvas::canvasMousePressEvent (QMouseEvent* event)
 	  else if (childObj.isa ("uicontrol") || childObj.isa ("uipanel"))
 	    {
 	      Matrix bb = childObj.get_properties ().get_boundingbox (false);
-	      QRectF r (bb(0), bb(1), bb(2), bb(3));
+	      QRect r (bb(0), bb(1), bb(2), bb(3));
 
 	      r.adjust (-5, -5, 5, 5);
 	      if (r.contains (event->pos ()))
@@ -194,7 +194,7 @@ void Canvas::canvasMousePressEvent (QMouseEvent* event)
               else if (it->get_properties ().is_hittest ())
                 {
                   Matrix bb = it->get_properties ().get_boundingbox (true);
-                  QRectF r (bb(0), bb(1), bb(2), bb(3));
+                  QRect r (bb(0), bb(1), bb(2), bb(3));
 
                   if (r.contains (event->pos ()))
                     axesObj = *it;
