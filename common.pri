@@ -3,6 +3,9 @@ win32:CONFIG += release warn_off
 !win32:CONFIG += debug
 PKGCONFIG = freetype2
 
+MOC_DIR = moc
+OBJECTS_DIR = obj
+
 QMAKE_CXXFLAGS += $$system(mkoctfile -p ALL_CXXFLAGS)
 win32 {
 	#QMAKE_CXXFLAGS_WARN_ON -= -W3
