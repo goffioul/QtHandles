@@ -1,5 +1,7 @@
+CONFIG += link_pkgconfig
 win32:CONFIG += release warn_off
 !win32:CONFIG += debug
+PKGCONFIG = freetype2
 
 QMAKE_CXXFLAGS += $$system(mkoctfile -p ALL_CXXFLAGS)
 win32 {
