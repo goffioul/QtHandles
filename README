@@ -37,7 +37,7 @@ Running from sources
 
 QtHandles can be run from sources, using the simple wrapper provided:
 
-	./tools/octave-qt
+	./tool/octave-qt
 
 This wrapper runs octave in CLI mode, but provides the necessary framework
 to run a Qt application. This wrapper is not required if you're running
