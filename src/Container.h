@@ -26,7 +26,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "GenericEventNotify.h"
 
-class graphics_handle;
+class octave_handle;
+typedef octave_handle graphics_handle;
 
 //////////////////////////////////////////////////////////////////////////////
 
